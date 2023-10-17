@@ -8,7 +8,7 @@ WIP: En principio voy a ir poniendo un temario para enseñar informática y elec
      - Desde un punto de vista histórico:
        - Con engranajes: La máquina analítica de Charles Babbage, que nunca llegó a ser terminada.
        - Con relés ("electromecánicos").
-       - Con bálbulas de vacío.
+       - Con válvulas de vacío.
        - Con transistores: 1º sin circuitos integrados y finalmente con circuitos integrados (es decir, creados con obleas de silicio dopadas para crear circuitos (eléctricos) microscópicos).
        - Cuánticos.
      - Implementaciones alternativas:
