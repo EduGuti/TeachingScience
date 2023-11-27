@@ -11,6 +11,7 @@ En mi canal de *YouTube* (https://www.youtube.com/@EduGuti9000) voy creando list
 
 ## Listado de temas
 
+ - [Conocimiento básico para usar esta documentación](https://github.com/EduGuti/TeachingScience/blob/main/Basic_knowledge.md)
  - [Introducción a los ordenadores/computadores](https://github.com/EduGuti/TeachingScience/blob/main/Introduction_to_computers.md)
  - [Inteligencia artificial: Modelos grandes de lenguaje (LLMs)](https://github.com/EduGuti/TeachingScience/blob/main/Large_languages_models.md)
  - [Listado de canales de YouTube](https://github.com/EduGuti/TeachingScience/blob/main/YouTube_channels_list.md). Obviamente ahí voy a ir poniendo lo que me parecen más interesantes, pero puede que no todos me parezcan útiles (voy a ir poniendo comentarios míos/personales sobre ellos, y en algunos casos serán positivo pero en otros serán negativos o simplemente curiosidades).
