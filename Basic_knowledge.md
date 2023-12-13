@@ -33,18 +33,39 @@ Listado de algunos comandos de terminales tipo Unix:
 
 Tabla que [*ChatGPT* me ha creado](https://chat.openai.com/share/ad3e8fea-d73a-4b6d-a39d-5a2424b16f90) (ToDo: en principio la pongo tal cual él la ha creado, pero quiero cambiarle algunas cosas):
 
-| Comando/Función         | GNU/Linux        | PowerShell (Windows) | CMD (Windows)   | Terminal (Mac)    |
-|-------------------------|------------------|----------------------|-----------------|-------------------|
-| Ver Directorio Actual   | `pwd`            | `Get-Location`       | `cd`            | `pwd`             |
-| Listar Archivos         | `ls`             | `Get-ChildItem`      | `dir`           | `ls`              |
-| Cambiar Directorio      | `cd`             | `Set-Location`       | `cd`            | `cd`              |
-| Copiar Archivos         | `cp`             | `Copy-Item`          | `copy`          | `cp`              |
-| Mover/Renombrar Archivo | `mv`             | `Move-Item`          | `move`          | `mv`              |
-| Borrar Archivo          | `rm`             | `Remove-Item`        | `del`           | `rm`              |
-| Ver Contenido Archivo   | `cat`            | `Get-Content`        | `type`          | `cat`             |
-| Buscar en Archivos      | `grep`           | `Select-String`      | `find` / `findstr` | `grep`         |
-| Ver Historial Comandos  | `history`        | `Get-History`        | `doskey /history` | `history`       |
-| Ayuda sobre Comando     | `man` / `--help` | `Get-Help`           | `help`          | `man` / `--help` |
+| Comando/Función               | GNU/Linux             | PowerShell (Windows)   | CMD (Windows)        | Terminal (Mac)       |
+|-------------------------------|-----------------------|------------------------|----------------------|----------------------|
+| Ver Directorio Actual         | `pwd`                 | `Get-Location`         | `cd`                 | `pwd`                |
+| Listar Archivos               | `ls`                  | `Get-ChildItem`        | `dir`                | `ls`                 |
+| Cambiar Directorio            | `cd`                  | `Set-Location`         | `cd`                 | `cd`                 |
+| Copiar Archivos               | `cp`                  | `Copy-Item`            | `copy`               | `cp`                 |
+| Mover/Renombrar Archivo       | `mv`                  | `Move-Item`            | `move`               | `mv`                 |
+| Borrar Archivo                | `rm`                  | `Remove-Item`          | `del`                | `rm`                 |
+| Ver Contenido Archivo         | `cat`                 | `Get-Content`          | `type`               | `cat`                |
+| Buscar en Archivos            | `grep`                | `Select-String`        | `find` / `findstr`   | `grep`               |
+| Ver Historial Comandos        | `history`             | `Get-History`          | `doskey /history`    | `history`            |
+| Ayuda sobre Comando           | `man` / `--help`      | `Get-Help`             | `help`               | `man` / `--help`     |
+| Crear Directorio              | `mkdir`               | `New-Item -Type Directory` | `mkdir`          | `mkdir`              |
+| Borrar Directorio             | `rmdir`               | `Remove-Item -Recurse` | `rmdir /s`           | `rmdir`              |
+| Descargar Archivo             | `wget` / `curl`       | `Invoke-WebRequest`    | -                    | `curl`               |
+| Ver Procesos Ejecutándose     | `ps`                  | `Get-Process`          | `tasklist`           | `ps`                 |
+| Matar Proceso                 | `kill`                | `Stop-Process`         | `taskkill`           | `kill`               |
+| Ver Información del Sistema   | `uname -a`            | `Get-ComputerInfo`     | `systeminfo`         | `uname -a`           |
+| Ver Espacio en Disco          | `df`                  | `Get-PSDrive`          | `wmic logicaldisk`   | `df`                 |
+| Monitorear Actividad de Red   | `netstat`             | `Get-NetTCPConnection` | `netstat`            | `netstat`            |
+| Cambiar Permisos de Archivo   | `chmod`               | `Set-Acl`              | `icacls`             | `chmod`              |
+| Cambiar Propietario de Archivo| `chown`               | `Get-Acl` / `Set-Acl`  | `takeown` / `icacls` | `chown`              |
+| Ver Variables de Entorno      | `printenv`            | `Get-ChildItem env:`   | `set`                | `printenv`           |
+| Establecer Variable de Entorno| `export VAR=value`    | `$env:VAR = "value"`   | `set VAR=value`      | `export VAR=value`   |
+| Ver Rutas de Red              | `route`               | `Get-NetRoute`         | `route`              | `netstat -r`         |
+| Conectar a SSH                | `ssh`                 | `New-SSHSession`       | -                    | `ssh`                |
+| Transferencia Segura de Archivos| `scp`               | `Copy-SSHItem`         | -                    | `scp`                |
+| Comprimir Archivos            | `tar` / `gzip`        | `Compress-Archive`     | `tar`                | `tar` / `gzip`       |
+| Descomprimir Archivos         | `tar` / `gunzip`      | `Expand-Archive`       | `tar`                | `tar` / `gunzip`     |
+| Ver la IP de la Máquina        | `hostname -I`         | `Resolve-DnsName`      | `ipconfig`           | `ifconfig`           |
+| Cambiar la IP de la Máquina    | `ifconfig`            | `New-NetIPAddress`     | `netsh interface ip` | `ifconfig`           |
+| Ver Rutas de Archivo          | `which` / `type`      | `Get-Command`          | `where`              | `which` / `type`     |
+| Editar Archivo en Terminal    | `nano` / `vi`         | `notepad` / `vim`      | `notepad`            | `nano` / `vi`        |
 
 
 ## Maquetación de texto usando marcado
