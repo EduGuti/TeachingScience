@@ -31,6 +31,22 @@ Listado de algunos comandos de terminales tipo Unix:
  - **cd** - Es abreviatura de *change directory* y sirve para cambiar de directorio.
  - ... (continuará)
 
+Tabla que [*ChatGPT* me ha creado](https://chat.openai.com/share/ad3e8fea-d73a-4b6d-a39d-5a2424b16f90) (ToDo: en principio la pongo tal cual él la ha creado, pero quiero cambiarle algunas cosas):
+
+| Comando/Función         | GNU/Linux        | PowerShell (Windows) | CMD (Windows)   | Terminal (Mac)    |
+|-------------------------|------------------|----------------------|-----------------|-------------------|
+| Ver Directorio Actual   | `pwd`            | `Get-Location`       | `cd`            | `pwd`             |
+| Listar Archivos         | `ls`             | `Get-ChildItem`      | `dir`           | `ls`              |
+| Cambiar Directorio      | `cd`             | `Set-Location`       | `cd`            | `cd`              |
+| Copiar Archivos         | `cp`             | `Copy-Item`          | `copy`          | `cp`              |
+| Mover/Renombrar Archivo | `mv`             | `Move-Item`          | `move`          | `mv`              |
+| Borrar Archivo          | `rm`             | `Remove-Item`        | `del`           | `rm`              |
+| Ver Contenido Archivo   | `cat`            | `Get-Content`        | `type`          | `cat`             |
+| Buscar en Archivos      | `grep`           | `Select-String`      | `find` / `findstr` | `grep`         |
+| Ver Historial Comandos  | `history`        | `Get-History`        | `doskey /history` | `history`       |
+| Ayuda sobre Comando     | `man` / `--help` | `Get-Help`           | `help`          | `man` / `--help` |
+
+
 ## Maquetación de texto usando marcado
 
 ### Markdown
