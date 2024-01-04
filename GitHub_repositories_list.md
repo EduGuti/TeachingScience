@@ -96,7 +96,11 @@ que tengo en los listados de mi cuenta de *YouTube*.
                  (del canal [Learn Code With JV](https://www.youtube.com/@LearnCodeWithJV))
  - [mimic3](https://github.com/MycroftAI/mimic3). **Licencia**: AGPL-3.0 license. **Tamaño**: ¿?.
    **Descipción** (<q lang="en">About</q>): <q lang="en">A fast local neural text to speech engine for Mycroft</q>.
-   **Mi comentario sobre él**: Aún no lo he probado.
+   **Mi comentario sobre él**: Lo he probado el día 2023-01-04 y, aunque no es perfecto, está muy bien. La entonación es bastante buena (incluso perfecta la mayor
+                               parte del tiempo) y la velocidad de generación es más que de sobra (en un Intel(R) Core(TM) i7-11800H @ 2.30GHz) para tiempo real.
+                               Lo he probado en inglés y en castellano, y la primera vez, que es usado en cada idioma, baja la red neuronal correspondiente al
+                               idioma usado (por defecto es el inglés, y para usar otro hay que indicar (con la opción <q>--voice</q>) una <q>voz</q> adecuada para
+                               él; la opción, para listar las voces disponibles, es <q>--voices</q>).
    **Añadido a este listado**: 2024-01-03.
    **Visto en**: el vídeo de *YouTube* [Free Speech: Reviewing Coqui-ai, Mycroft Mimic3 and Tortoise TTS Libraries](https://www.youtube.com/watch?v=JZWeYbtCisk)
                  (del canal [Learn Code With JV](https://www.youtube.com/@LearnCodeWithJV))
