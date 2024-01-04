@@ -15,7 +15,7 @@ que tengo en los listados de mi cuenta de *YouTube*.
  - [gpt4all](https://github.com/nomic-ai/gpt4all)
    **Descripción** (<q lang="en">About</q>): <q lang="en">gpt4all: open-source LLM chatbots that you can run anywhere</q>.
    **Mi comentario sobre él**: .
-   **Añadido a este listado**: 2024-01-03. **Visto en**: el la descripción del vídeo de *YouTube* [How To Install PrivateGPT - Chat With PDF, TXT, and CSV Files Privately! (Quick Setup Guide)](https://www.youtube.com/watch?v=jxSPx1bfl2M), del canal [Matthew Berman](https://www.youtube.com/@matthew_berman)).
+   **Añadido a este listado**: 2024-01-03. **Visto en**: la descripción del vídeo de *YouTube* [How To Install PrivateGPT - Chat With PDF, TXT, and CSV Files Privately! (Quick Setup Guide)](https://www.youtube.com/watch?v=jxSPx1bfl2M), del canal [Matthew Berman](https://www.youtube.com/@matthew_berman)).
  - [PrivateGPT](https://github.com/imartinez/privateGPT)
    **Descripción** (<q lang="en">About</q>): <q lang="en">Interact with your documents using the power of GPT, 100% privately, no data leaks</q>.
    **Mi comentario sobre él**: .
@@ -34,26 +34,42 @@ que tengo en los listados de mi cuenta de *YouTube*.
    (del canal [Matthew Berman](https://www.youtube.com/@matthew_berman))
  - [crewAI](https://github.com/joaomdmoura/crewAI). **Licencia**: <q>MIT license</q>. **Tamaño**: ¿?.
    **Descripción** (<q lang="en">About</q>): <q lang="en">No description, website, or topics provided.</q>.
-   **Mi comentario sobre él**: Es posible usarlo con *Ollama*.
-   **Añadido a este listado**: 2024-01-03. **Visto en**: el vídeo de *YouTube* [CrewAI is Better than AutoGEN ?? Use with Ollama Openhermes !!](https://www.youtube.com/watch?v=GKr5URJvNDQ)
-   (del canal [Prompt Engineer](https://www.youtube.com/@PromptEngineer48))
+   **Mi comentario sobre él**: Es un proyecto que a día 2024-01-03 aún está poco maduro, pero están trabajando en él. La idea me gusta, y también me gusta que
+                               sea posible usarlo con *Ollama*. La idea principal es crear un capa por encima de *LangChain* para, aprovechando la creación de
+                               agentes de *LangChain*, definir varios agentes, cada uno de ellos con sus roles/personajes y herramientas (incluyendo un modelo
+                               grande de lenguaje (LLM) específico), sus tareas y unas simples relaciones entre ellos. El objetivo es similar al de *AutoGen*,
+                               pero, en su contra, no tiene tantas cosas como *AutoGen*, y a su favor tiene la simplicidad (tanto en su código, por usar
+                               *LangChain*, como en el código creado al usar esta biblioteca, ya que los conceptos principales son más simples y claros (esto
+                               es debido principalmente a que la coordinación de grupos de agentes en *LangChain* es llevada a cabo por completo por un LLM,
+                               a través de un <q>agente proxy</q>, como ellos lo llaman, mientras que aquí, con *CrewAI*, el programador tiene más control sobre
+                               eso desde el principio, y por tanto es más fácil de entender cómo el grupo va a funcionar/(ser gestionado). Lo probé el día
+                               2024-01-03 con el modelo <q>soler</q> a través de *Ollama+, con un ejemplo muy sencillo, y conseguí que funcionase (para lo cual
+                               la documentación me ayudó algo, pero la documentación tampoco está muy madura todavía) pero el resultado fue muy cutre (quizás
+                               por culpa del modelo usado). Como la idea de este proyecto me gusta, tengo intención de hacer más pruebas, a ver si consigo algo
+                               útil/práctico.
+   **Añadido a este listado**: 2024-01-03.
+   **Visto en**: el vídeo de *YouTube* [CrewAI is Better than AutoGEN ?? Use with Ollama Openhermes !!](https://www.youtube.com/watch?v=GKr5URJvNDQ)
+                 (del canal [Prompt Engineer](https://www.youtube.com/@PromptEngineer48))
  - [GPT Pilot](https://github.com/Pythagora-io/gpt-pilot). **Licencia**: <q>MIT license</q>. **Tamaño**: ¿?.
    **Descripción** (<q lang="en">About</q>): <q lang="en">Dev tool that writes scalable apps from scratch while the developer oversees the implementation</q>.
    **Mi comentario sobre él**: Aún no lo he probado.
    **Añadido a este listado**: 2024-01-03.
    **Visto en**: el vídeo de *YouTube* [GPT Pilot ✈️ Build Full Stack Apps with a SINGLE PROMPT (Made for Devs)](https://www.youtube.com/watch?v=iwLe6UWyaS4)
-                 (del canal [Matthew Berman](https://www.youtube.com/@matthew_berman))
+                 (del canal [Matthew Berman](https://www.youtube.com/@matthew_berman)), en el que tiene la siguiente presentación: <q>GPT Pilot allows you to
+                 create full-stack applications easily, pairing with AI. GPT Pilot is meant for engineers or engineering teams and allows you to work
+                 hand-in-hand with AI to build sophisticated applications step-by-step. It is completely open-source, and they also sponsor this video.</q>.
+
+## AI - ANN - LLMs - utilities - AutoGen
  - [Ejemplos de AutoGEN_con Ollama](https://github.com/PromptEngineer48/AutoGEN_Ollama). **Licencia**: No está indicada. **Tamaño**: ¿?.
    **Descripción** (<q lang="en">About</q>): <q lang="en">No description, website, or topics provided.</q>.
    **Mi comentario sobre él**: Aún no lo he probado.
    **Añadido a este listado**: 2024-01-03.
    **Visto en**: el vídeo de *YouTube* [Run AutoGEN using Ollama/LiteLLM in SIMPLE Steps | Updated (Use Case)](https://www.youtube.com/watch?v=gx6X5XJ8uH4)
                  (del canal [Prompt Engineer](https://www.youtube.com/@PromptEngineer48))
-
-## AI - ANN - LLMs - utilities - AutoGen
  - [cracecasts](https://github.com/jaredcrace/cracecasts)
    **Descripción** (<q lang="en">About</q>): <q lang="en">Repository for CraceCasts YouTube channel</q>.
-   **Mi comentario sobre él**: Contiene el código mostrado en vídeos del canal [CraceCasts](https://www.youtube.com/@CraceCasts), que contiene varios vídeos sobre <q lang="en">web scrapping</q>.
+   **Mi comentario sobre él**: Contiene el código mostrado en vídeos del canal [CraceCasts](https://www.youtube.com/@CraceCasts), que contiene varios vídeos sobre <q lang="en">web scrapping</q>
+                               usando código de *Python* generado con *AutoGen* junto con *Ollama*.
    **Añadido a este listado**: 2024-01-03. **Visto en**: el vídeo de *YouTube* [Search/Read Airbnb with Autogen created Python webscraper](https://www.youtube.com/watch?v=FS7rEdsu7SE)
 
 ## AI - ANN - Generative AI - Images - Stable Diffusion
@@ -66,7 +82,10 @@ que tengo en los listados de mi cuenta de *YouTube*.
  - [YOLO3D](https://github.com/ruhyadi/YOLO3D). **Licencia**: No indicada. **Tamaño**: ¿?.
    **Descipción** (<q lang="en">About</q>): <q lang="en">YOLO 3D Object Detection for Autonomous Driving Vehicle</q>.
    **Mi comentario sobre él**: Aún no lo he probado.
-   **Añadido a este listado**: 2024-01-03. **Visto en**: el vídeo de *YouTube* [Object detection using Yolo3D with ROS2](https://www.youtube.com/watch?v=KTCtTLwJXP0) (del canal [robot mania](https://www.youtube.com/@robotmania8896); el código de ese vídeo está en [este enlace](https://drive.google.com/drive/folders/1SyyDtQC7LpSIld-jmtkI1qXXDnLNDg6w), que está puesto en su descripción)
+   **Añadido a este listado**: 2024-01-03.
+   **Visto en**: el vídeo de *YouTube* [Object detection using Yolo3D with ROS2](https://www.youtube.com/watch?v=KTCtTLwJXP0)
+                 (del canal [robot mania](https://www.youtube.com/@robotmania8896); el código de ese vídeo está en
+                 [este enlace](https://drive.google.com/drive/folders/1SyyDtQC7LpSIld-jmtkI1qXXDnLNDg6w), que está puesto en su descripción)
 
 ## AI - ANN - for voice
  - [Coqui TTS](https://github.com/coqui-ai/TTS). **Licencia**: MPL-2.0 license. **Tamaño**: ¿?.
@@ -98,4 +117,5 @@ que tengo en los listados de mi cuenta de *YouTube*.
    **Mi comentario sobre él**: Aún no lo he ni bajado.
    **Añadido a este listado**: 2024-01-03.
    **Visto en**: el vídeo de *YouTube* [Free Speech: Reviewing Coqui-ai, Mycroft Mimic3 and Tortoise TTS Libraries](https://www.youtube.com/watch?v=JZWeYbtCisk)
-                 (del canal [Learn Code With JV](https://www.youtube.com/@LearnCodeWithJV)), en el que tiene la siguiente presentación: <q>GPT Pilot allows you to create full-stack applications easily, pairing with AI. GPT Pilot is meant for engineers or engineering teams and allows you to work hand-in-hand with AI to build sophisticated applications step-by-step. It is completely open-source, and they also sponsor this video.</q>.
+                 (del canal [Learn Code With JV](https://www.youtube.com/@LearnCodeWithJV))
+   
