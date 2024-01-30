@@ -34,7 +34,7 @@ A continuación pongo un esquema (no completo, sino sólo de los métodos que me
 Aquí no pongo la descripción, de cada método/clase y que está en el código fuente, para que este esquema ocupe menos y porque es posible verlo siguiendo el correspondiente enlace.
 AVISO: Los enlaces indican la línea en la que el correspondiente métido está definido, en el código fuente de *LangChain*, a día 2024-01-30, pero puede ser que cambien eso y yo no voy a estar muy pendiente de actualizar esto.
 WIP:
- - [from_texts](https://github.com/langchain-ai/langchain/blob/master/libs/community/langchain_community/vectorstores/faiss.py#L887)
+ - [from_texts](https://github.com/langchain-ai/langchain/blob/master/libs/community/langchain_community/vectorstores/faiss.py#L933)
    <pre>
     @classmethod
     def from_texts(
@@ -55,7 +55,7 @@ WIP:
             **kwargs,
         )
    </pre>
- - [load_local](https://github.com/langchain-ai/langchain/blob/master/libs/community/langchain_community/vectorstores/faiss.py#L1039)
+ - [load_local](https://github.com/langchain-ai/langchain/blob/master/libs/community/langchain_community/vectorstores/faiss.py#L1085)
    <pre>
     @classmethod
     def load_local(
@@ -90,7 +90,7 @@ WIP:
         embeddings = self._embed_documents(texts)
         return self.__add(texts, embeddings, metadatas=metadatas, ids=ids)
    </pre>
- - [save_local](https://github.com/langchain-ai/langchain/blob/master/libs/community/langchain_community/vectorstores/faiss.py#L1017)
+ - [save_local](https://github.com/langchain-ai/langchain/blob/master/libs/community/langchain_community/vectorstores/faiss.py#L1063)
    <pre>
      def save_local(self, folder_path: str, index_name: str = "index") -> None:
         path = Path(folder_path)
