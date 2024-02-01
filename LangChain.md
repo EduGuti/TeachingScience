@@ -2,6 +2,14 @@
 
 ## Uso de vectores de características
 
+A día 2024-02-01, del [código fuente de la gestión, de sistemas de almacenamiento de vectores, de *LangChain*](https://github.com/langchain-ai/langchain/tree/master/libs/community/langchain_community/vectorstores), he mirado el contenido de los siguientes ficheros (de los 76 que hay ahí, si no he contado mal), los cuales a continuación listo en orden desde el más simple hasta el más complejo (en igualdad de complejidad, al menos en cuanto a cantidad de funcionalidades y de manera aproximada, pongo delante los que usan extensiones de otras bases de datos más generales y populares, como por ejemplo *SQLite*), y luego iré creando subsecciones para comentarlos.
+ - [sklearn.py](https://github.com/langchain-ai/langchain/blob/master/libs/community/langchain_community/vectorstores/sklearn.py)
+ - [faiss.py](https://github.com/langchain-ai/langchain/blob/master/libs/community/langchain_community/vectorstores/faiss.py)
+ - [sqlitevss.py](https://github.com/langchain-ai/langchain/blob/master/libs/community/langchain_community/vectorstores/sqlitevss.py)
+ - [pgvector.py](https://github.com/langchain-ai/langchain/blob/master/libs/community/langchain_community/vectorstores/pgvector.py)
+ - [chroma.py](https://github.com/langchain-ai/langchain/blob/master/libs/community/langchain_community/vectorstores/chroma.py)
+ - [qdrant.py](https://github.com/langchain-ai/langchain/blob/master/libs/community/langchain_community/vectorstores/qdrant.py)
+
 ### Con FAISS (de Meta AI)
 
 A continuación voy a poner un esquema de las principales clases, y métodos, de un ejemplo de caso de uso de *LangChain* con *FAISS*.
