@@ -20,7 +20,7 @@ Y para hacer eso **con imágenes** (característica/funcionalidad nueva en ChatG
 
 Tutoriales:
 
- - [Fine-Tuning LLaMA 2: A Step-by-Step Guide to Customizing the Large Language Model](https://www.datacamp.com/tutorial/fine-tuning-llama-2): <q>Learn how to fine-tune Llama-2 on Colab using new techniques to overcome memory and computing limitations to make open-source large language models more accessible.</q>. <q>Updated Oct 2023  · 12 min read</q>. Author: Abid Ali Awan. Usa un conjunto de datos ya existente (<q>We will load the “guanaco-llama2-1k” dataset from the Hugging Face hub. The dataset contains 1000 samples and has been processed to match the Llama 2 prompt format, and is a subset of the excellent timdettmers/openassistant-guanaco dataset.</q>), pero muestra el formato que cada prompt debe tener, por lo que es posible usar esto con uno personal. Todo el código seguido:
+ - [Fine-Tuning LLaMA 2: A Step-by-Step Guide to Customizing the Large Language Model](https://www.datacamp.com/tutorial/fine-tuning-llama-2): <q>Learn how to fine-tune Llama-2 on Colab using new techniques to overcome memory and computing limitations to make open-source large language models more accessible.</q>. <q>Updated Oct 2023  · 12 min read</q>. Author: Abid Ali Awan. Usa un conjunto de datos ya existente (<q>We will load the “guanaco-llama2-1k” dataset from the Hugging Face hub. The dataset contains 1000 samples and has been processed to match the Llama 2 prompt format, and is a subset of the excellent timdettmers/openassistant-guanaco dataset.</q>), pero muestra el formato que cada prompt debe tener, por lo que es posible usar esto con uno personal. La sección 9 de ese tutorial es la del entrenamiento propiamente dicho (Todo su texto: <q>9. Model fine-tuning</q>: <q>Supervised fine-tuning (SFT) is a key step in reinforcement learning from human feedback (RLHF). The TRL library from HuggingFace provides an easy-to-use API to create SFT models and train them on your dataset with just a few lines of code. It comes with tools to train language models using reinforcement learning, starting with supervised fine-tuning, then reward modeling, and finally, proximal policy optimization (PPO).</q>. <q>We will provide SFT Trainer the model, dataset, Lora configuration, tokenizer, and training parameters.</q>. <q>We will use .train() to fine-tune the Llama 2 model on a new dataset. It took one and a half hours for the model to complete 1 epoch.</q>. <q>After training the model, we will save the model adopter and tokenizers. You can also upload the model to Hugging Face using a similar API.</q>). **Para probarlo en 'Colab' es necesario pagar por una GPU con más memoria** (a día 2024-05-11, la versión gratuita ofrece una GPU T4 con 15.0 GB de RAM, además de 12.7 GB de RAM de sistema, que para esto da igual (es decir, esos 12.7 GB son más que suficientes, ya que para esto sólo usa 2.7 GB)). Todo el código seguido:
 <pre>
 %%capture
 %pip install accelerate peft bitsandbytes transformers trl
@@ -109,6 +109,9 @@ trainer = SFTTrainer(
     args=training_params,
     packing=False,
 )
+
+# Train model
+trainer.train()
 
 trainer.model.save_pretrained(new_model)
 trainer.tokenizer.save_pretrained(new_model)
