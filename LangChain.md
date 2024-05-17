@@ -33,57 +33,57 @@ Voy a empezar mayormente por el 2º (con algunas excepciones); como he dicho, es
     
         All language model wrappers inherit from BaseLanguageModel.
         """
-    ...
-    @abstractmethod
-    def generate_prompt(
-        self,
-        prompts: List[PromptValue],
-        stop: Optional[List[str]] = None,
-        callbacks: Callbacks = None,
-        **kwargs: Any,
-    ) -> LLMResult:
-        """Pass a sequence of prompts to the model and return model generations.
-
-        This method should make use of batched calls for models that expose a batched
-        API.
-
-        Use this method when you want to:
-            1. take advantage of batched calls,
-            2. need more output from the model than just the top generated value,
-            3. are building chains that are agnostic to the underlying language model
-                type (e.g., pure text completion models vs chat models).
-
-        Args:
-            prompts: List of PromptValues. A PromptValue is an object that can be
-                converted to match the format of any language model (string for pure
-                text generation models and BaseMessages for chat models).
-            stop: Stop words to use when generating. Model output is cut off at the
-                first occurrence of any of these substrings.
-            callbacks: Callbacks to pass through. Used for executing additional
-                functionality, such as logging or streaming, throughout generation.
-            **kwargs: Arbitrary additional keyword arguments. These are usually passed
-                to the model provider API call.
-
-        Returns:
-            An LLMResult, which contains a list of candidate Generations for each input
-                prompt and additional model provider-specific output.
-        """
         ...
-    def with_structured_output(
-        self, schema: Union[Dict, Type[BaseModel]], **kwargs: Any
-    ) -> Runnable[LanguageModelInput, Union[Dict, BaseModel]]:
-        """Not implemented on this class."""
-        # Implement this on child class if there is a way of steering the model to
-        # generate responses that match a given schema.
-        raise NotImplementedError()
+        @abstractmethod
+        def generate_prompt(
+            self,
+            prompts: List[PromptValue],
+            stop: Optional[List[str]] = None,
+            callbacks: Callbacks = None,
+            **kwargs: Any,
+        ) -> LLMResult:
+            """Pass a sequence of prompts to the model and return model generations.
+    
+            This method should make use of batched calls for models that expose a batched
+            API.
+    
+            Use this method when you want to:
+                1. take advantage of batched calls,
+                2. need more output from the model than just the top generated value,
+                3. are building chains that are agnostic to the underlying language model
+                    type (e.g., pure text completion models vs chat models).
+    
+            Args:
+                prompts: List of PromptValues. A PromptValue is an object that can be
+                    converted to match the format of any language model (string for pure
+                    text generation models and BaseMessages for chat models).
+                stop: Stop words to use when generating. Model output is cut off at the
+                    first occurrence of any of these substrings.
+                callbacks: Callbacks to pass through. Used for executing additional
+                    functionality, such as logging or streaming, throughout generation.
+                **kwargs: Arbitrary additional keyword arguments. These are usually passed
+                    to the model provider API call.
+    
+            Returns:
+                An LLMResult, which contains a list of candidate Generations for each input
+                    prompt and additional model provider-specific output.
+            """
         ...
-    def get_token_ids(self, text: str) -> List[int]:
-    ...
-    def get_num_tokens(self, text: str) -> int:
-        return len(self.get_token_ids(text))
-    def get_num_tokens_from_messages(self, messages: List[BaseMessage]) -> int:
-        return sum([self.get_num_tokens(get_buffer_string([m])) for m in messages])
-    ...
+        def with_structured_output(
+            self, schema: Union[Dict, Type[BaseModel]], **kwargs: Any
+        ) -> Runnable[LanguageModelInput, Union[Dict, BaseModel]]:
+            """Not implemented on this class."""
+            # Implement this on child class if there is a way of steering the model to
+            # generate responses that match a given schema.
+            raise NotImplementedError()
+            ...
+        def get_token_ids(self, text: str) -> List[int]:
+        ...
+        def get_num_tokens(self, text: str) -> int:
+            return len(self.get_token_ids(text))
+        def get_num_tokens_from_messages(self, messages: List[BaseMessage]) -> int:
+            return sum([self.get_num_tokens(get_buffer_string([m])) for m in messages])
+        ...
    </pre>
  - [libs/core/langchain_core/language_models/llms.py](https://github.com/langchain-ai/langchain/blob/master/libs/core/langchain_core/language_models/llms.py)
  - [libs/core/langchain_core/language_models/fake.py](https://github.com/langchain-ai/langchain/blob/master/libs/core/langchain_core/language_models/fake.py)
