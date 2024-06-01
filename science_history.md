@@ -11,3 +11,4 @@ Para este documento, en principio voy a empezar (lo empiezo a día 2024-05-21) c
 ## Eventos
 
  - <q src="Wikipedia en inglés a día 2024-05-19">1743 – French physicist Jean-Pierre Christin published the design of a mercury thermometer using the centigrade scale, with 0 representing the melting point of water and 100 its boiling point.</q>. Visto en la portada de Wikipedia en inglés el día 2024-05-19.
+ - <q src="Wikipedia en inglés a día 2024-06-01"><a href="/wiki/1974" title="1974">1974</a> – In an informal article in a medical journal, <b><a href="/wiki/Henry_Heimlich" title="Henry Heimlich">Henry Heimlich</a></b> introduced the concept of <a href="/wiki/Abdominal_thrusts" title="Abdominal thrusts">abdominal thrusts</a>, commonly known as the Heimlich maneuver, to treat victims of <a href="/wiki/Choking" title="Choking">choking</a></q>. Visto en la portada de Wikipedia en inglés el día 2024-06-01.
