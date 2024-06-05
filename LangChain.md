@@ -86,10 +86,414 @@ Voy a empezar mayormente por el 2º (con algunas excepciones); como he dicho, es
         ...
    </pre>
  - [libs/core/langchain_core/language_models/llms.py](https://github.com/langchain-ai/langchain/blob/master/libs/core/langchain_core/language_models/llms.py)
+   Este fichero tiene 1341 líneas a día 2024-06-04, así que, como son muchas, voy a intentar poner sólo lo más relevante y lo más resumido posible.
+   Tiene 2 clases:
+   - BaseLLM. Cualquier clase descendiente de esta podrá ser usada a través del método 'invoke'. Aquí ese método usa el método _convert_input para adaptar el valor del parámetro 'input', que debe ser "a PromptValue, str, or list of BaseMessages", para ser usado en el método 'generate_prompt' (como un valor de que debe ser instancia de la clase 'PromptValue' o de una descendiente de ella), que a su vez usa/(llama a) el método 'generate', que a su vez usa el método '_generate_helper', que a su vez usa el método '_generate', que a su vez usa el método '_call' (que es un método abstracto que debe ser implementado en cada clase descendiente de esta).
+   <pre>
+   class BaseLLM(BaseLanguageModel[str], ABC):
+    """Base LLM abstract interface.
+
+    It should take in a prompt and return a string."""
+	
+	...
+	
+	def _convert_input(self, input: LanguageModelInput) -> PromptValue:
+        if isinstance(input, PromptValue):
+            return input
+        elif isinstance(input, str):
+            return StringPromptValue(text=input)
+        elif isinstance(input, Sequence):
+            return ChatPromptValue(messages=convert_to_messages(input))
+        else:
+            raise ValueError(
+                f"Invalid input type {type(input)}. "
+                "Must be a PromptValue, str, or list of BaseMessages."
+            )
+
+    def invoke(
+        self,
+        input: LanguageModelInput,
+        config: Optional[RunnableConfig] = None,
+        *,
+        stop: Optional[List[str]] = None,
+        **kwargs: Any,
+    ) -> str:
+        config = ensure_config(config)
+        return (
+            self.generate_prompt(
+                [self._convert_input(input)],
+                stop=stop,
+                callbacks=config.get("callbacks"),
+                tags=config.get("tags"),
+                metadata=config.get("metadata"),
+                run_name=config.get("run_name"),
+                run_id=config.pop("run_id", None),
+                **kwargs,
+            )
+            .generations[0][0]
+            .text
+        )
+	
+	...
+	
+	def generate_prompt(
+        self,
+        prompts: List[PromptValue],
+        stop: Optional[List[str]] = None,
+        callbacks: Optional[Union[Callbacks, List[Callbacks]]] = None,
+        **kwargs: Any,
+    ) -> LLMResult:
+        prompt_strings = [p.to_string() for p in prompts]
+        return self.generate(prompt_strings, stop=stop, callbacks=callbacks, **kwargs)
+	
+	...
+	
+	def generate(
+        self,
+        prompts: List[str],
+        stop: Optional[List[str]] = None,
+        callbacks: Optional[Union[Callbacks, List[Callbacks]]] = None,
+        *,
+        tags: Optional[Union[List[str], List[List[str]]]] = None,
+        metadata: Optional[Union[Dict[str, Any], List[Dict[str, Any]]]] = None,
+        run_name: Optional[Union[str, List[str]]] = None,
+        run_id: Optional[Union[uuid.UUID, List[Optional[uuid.UUID]]]] = None,
+        **kwargs: Any,
+    ) -> LLMResult:
+        """Pass a sequence of prompts to a model and return generations.
+
+        This method should make use of batched calls for models that expose a batched
+        API.
+
+        Use this method when you want to:
+            1. take advantage of batched calls,
+            2. need more output from the model than just the top generated value,
+            3. are building chains that are agnostic to the underlying language model
+                type (e.g., pure text completion models vs chat models).
+
+        Args:
+            prompts: List of string prompts.
+            stop: Stop words to use when generating. Model output is cut off at the
+                first occurrence of any of these substrings.
+            callbacks: Callbacks to pass through. Used for executing additional
+                functionality, such as logging or streaming, throughout generation.
+            **kwargs: Arbitrary additional keyword arguments. These are usually passed
+                to the model provider API call.
+
+        Returns:
+            An LLMResult, which contains a list of candidate Generations for each input
+                prompt and additional model provider-specific output.
+        """
+		
+		...
+		
+        return LLMResult(generations=generations, llm_output=llm_output, run=run_info)
+   </pre>
+   - LLM
+   <pre>
+   class LLM(BaseLLM):
+    """Simple interface for implementing a custom LLM.
+
+    You should subclass this class and implement the following:
+
+    - `_call` method: Run the LLM on the given prompt and input (used by `invoke`).
+    - `_identifying_params` property: Return a dictionary of the identifying parameters
+        This is critical for caching and tracing purposes. Identifying parameters
+        is a dict that identifies the LLM.
+        It should mostly include a `model_name`.
+
+    Optional: Override the following methods to provide more optimizations:
+
+    - `_acall`: Provide a native async version of the `_call` method.
+        If not provided, will delegate to the synchronous version using
+        `run_in_executor`. (Used by `ainvoke`).
+    - `_stream`: Stream the LLM on the given prompt and input.
+        `stream` will use `_stream` if provided, otherwise it
+        use `_call` and output will arrive in one chunk.
+    - `_astream`: Override to provide a native async version of the `_stream` method.
+        `astream` will use `_astream` if provided, otherwise it will implement
+        a fallback behavior that will use `_stream` if `_stream` is implemented,
+        and use `_acall` if `_stream` is not implemented.
+    """
+
+    @abstractmethod
+    def _call(
+        self,
+        prompt: str,
+        stop: Optional[List[str]] = None,
+        run_manager: Optional[CallbackManagerForLLMRun] = None,
+        **kwargs: Any,
+    ) -> str:
+        """Run the LLM on the given input.
+
+        Override this method to implement the LLM logic.
+
+        Args:
+            prompt: The prompt to generate from.
+            stop: Stop words to use when generating. Model output is cut off at the
+                first occurrence of any of the stop substrings.
+                If stop tokens are not supported consider raising NotImplementedError.
+            run_manager: Callback manager for the run.
+            **kwargs: Arbitrary additional keyword arguments. These are usually passed
+                to the model provider API call.
+
+        Returns:
+            The model output as a string. SHOULD NOT include the prompt.
+        """
+	
+	...
+	
+	def _generate(
+        self,
+        prompts: List[str],
+        stop: Optional[List[str]] = None,
+        run_manager: Optional[CallbackManagerForLLMRun] = None,
+        **kwargs: Any,
+    ) -> LLMResult:
+        """Run the LLM on the given prompt and input."""
+        # TODO: add caching here.
+        generations = []
+        new_arg_supported = inspect.signature(self._call).parameters.get("run_manager")
+        for prompt in prompts:
+            text = (
+                self._call(prompt, stop=stop, run_manager=run_manager, **kwargs)
+                if new_arg_supported
+                else self._call(prompt, stop=stop, **kwargs)
+            )
+            generations.append([Generation(text=text)])
+        return LLMResult(generations=generations)
+	</pre>
  - [libs/core/langchain_core/language_models/fake.py](https://github.com/langchain-ai/langchain/blob/master/libs/core/langchain_core/language_models/fake.py)
+ Como su nombre indica, no es un LLM propiamente dicho sino que simplemente tiene un listado de respuestas predefinidas. Al ser la implementación más simple de una subclase de la clase LLM, es un buen ejemplo de cómo crear subclases de esa clase. Este fichero tiene 2 clases (subclases/descendientes de la clase LLM: FakeListLLM, y FakeStreamingListLLM que es una subclase de 'FakeListLLM'), de las cuales sólo voy a poner aquí la 1ª ('FakeListLLM'; pongo todo su código excepto el método '_acall', porque, para simplificar, en esta documentación estoy ignorando el asincronismo).
+ <pre>
+ class FakeListLLM(LLM):
+    """Fake LLM for testing purposes."""
+
+    responses: List[str]
+    sleep: Optional[float] = None
+    i: int = 0
+
+    @property
+    def _llm_type(self) -> str:
+        """Return type of llm."""
+        return "fake-list"
+
+    def _call(
+        self,
+        prompt: str,
+        stop: Optional[List[str]] = None,
+        run_manager: Optional[CallbackManagerForLLMRun] = None,
+        **kwargs: Any,
+    ) -> str:
+        """Return next response"""
+        response = self.responses[self.i]
+        if self.i < len(self.responses) - 1:
+            self.i += 1
+        else:
+            self.i = 0
+        return response
+
+    ...
+
+    @property
+    def _identifying_params(self) -> Mapping[str, Any]:
+        return {"responses": self.responses}
+ </pre>
  - [libs/community/langchain_community/llms/fake.py](https://github.com/langchain-ai/langchain/blob/master/libs/community/langchain_community/llms/fake.py)
+   Es igual al anterior (el del paquete "core"), y supongo que lo han copiado desde allí para (en alguna versión) eliminar el anterior.
  - [libs/community/langchain_community/llms/human.py](https://github.com/langchain-ai/langchain/blob/master/libs/community/langchain_community/llms/human.py)
+   Al igual que el "fake"/falso, este "LLM" tampoco es un LLM propiamente dicho (al menos no "artificial"; este es biológico, jeje) sino que las respuestas son introducidas por el usuario cuando esto es ejecutado. Por tanto, es la 2ª implementación, de una subclase de la clase LLM, más simple. Como es muy corto, y es un buen ejemplo (ni siquiera tiene función asíncrona), aquí pongo todo su código (excepto la importación de módulos).
+   <pre>
+   def _display_prompt(prompt: str) -> None:
+    """Displays the given prompt to the user."""
+    print(f"\n{prompt}")  # noqa: T201
+
+
+def _collect_user_input(
+    separator: Optional[str] = None, stop: Optional[List[str]] = None
+) -> str:
+    """Collects and returns user input as a single string."""
+    separator = separator or "\n"
+    lines = []
+
+    while True:
+        line = input()
+        if not line:
+            break
+        lines.append(line)
+
+        if stop and any(seq in line for seq in stop):
+            break
+    # Combine all lines into a single string
+    multi_line_input = separator.join(lines)
+    return multi_line_input
+
+
+class HumanInputLLM(LLM):
+    """User input as the response."""
+
+    input_func: Callable = Field(default_factory=lambda: _collect_user_input)
+    prompt_func: Callable[[str], None] = Field(default_factory=lambda: _display_prompt)
+    separator: str = "\n"
+    input_kwargs: Mapping[str, Any] = {}
+    prompt_kwargs: Mapping[str, Any] = {}
+
+    @property
+    def _identifying_params(self) -> Mapping[str, Any]:
+        """
+        Returns an empty dictionary as there are no identifying parameters.
+        """
+        return {}
+
+    @property
+    def _llm_type(self) -> str:
+        """Returns the type of LLM."""
+        return "human-input"
+
+    def _call(
+        self,
+        prompt: str,
+        stop: Optional[List[str]] = None,
+        run_manager: Optional[CallbackManagerForLLMRun] = None,
+        **kwargs: Any,
+    ) -> str:
+        """
+        Displays the prompt to the user and returns their input as a response.
+
+        Args:
+            prompt (str): The prompt to be displayed to the user.
+            stop (Optional[List[str]]): A list of stop strings.
+            run_manager (Optional[CallbackManagerForLLMRun]): Currently not used.
+
+        Returns:
+            str: The user's input as a response.
+        """
+        self.prompt_func(prompt, **self.prompt_kwargs)
+        user_input = self.input_func(
+            separator=self.separator, stop=stop, **self.input_kwargs
+        )
+
+        if stop is not None:
+            # I believe this is required since the stop tokens
+            # are not enforced by the human themselves
+            user_input = enforce_stop_tokens(user_input, stop)
+        return user_input
+   </pre>
  - [libs/core/langchain_core/language_models/chat_models.py](https://github.com/langchain-ai/langchain/blob/master/libs/core/langchain_core/language_models/chat_models.py)
+   Este fichero tiene 2 clases: 'BaseChatModel' y 'SimpleChatModel'.
+     - 'BaseChatModel'. La jerarquía de llamadas a funciones es parecida a la de la clase 'BaseModel'. A continuación pongo la jerarquía para esta clase y parte de su código (los métodos principales).
+	   + invoke
+	     + generate_prompt
+	       + generate
+		     + _generate_with_cache
+			   + _generate (método abstracto)
+	 <pre>
+	class BaseChatModel(BaseLanguageModel[BaseMessage], ABC):
+    """Base class for Chat models."""
+	 
+	...
+	 
+	def invoke(
+        self,
+        input: LanguageModelInput,
+        config: Optional[RunnableConfig] = None,
+        *,
+        stop: Optional[List[str]] = None,
+        **kwargs: Any,
+    ) -> BaseMessage:
+        config = ensure_config(config)
+        return cast(
+            ChatGeneration,
+            self.generate_prompt(
+                [self._convert_input(input)],
+                stop=stop,
+                callbacks=config.get("callbacks"),
+                tags=config.get("tags"),
+                metadata=config.get("metadata"),
+                run_name=config.get("run_name"),
+                run_id=config.pop("run_id", None),
+                **kwargs,
+            ).generations[0][0],
+        ).message
+	
+	...
+	
+	def generate(
+        self,
+        messages: List[List[BaseMessage]],
+        stop: Optional[List[str]] = None,
+        callbacks: Callbacks = None,
+        *,
+        tags: Optional[List[str]] = None,
+        metadata: Optional[Dict[str, Any]] = None,
+        run_name: Optional[str] = None,
+        run_id: Optional[uuid.UUID] = None,
+        **kwargs: Any,
+    ) -> LLMResult:
+        """Pass a sequence of prompts to the model and return model generations.
+
+        This method should make use of batched calls for models that expose a batched
+        API.
+
+        Use this method when you want to:
+            1. take advantage of batched calls,
+            2. need more output from the model than just the top generated value,
+            3. are building chains that are agnostic to the underlying language model
+                type (e.g., pure text completion models vs chat models).
+
+        Args:
+            messages: List of list of messages.
+            stop: Stop words to use when generating. Model output is cut off at the
+                first occurrence of any of these substrings.
+            callbacks: Callbacks to pass through. Used for executing additional
+                functionality, such as logging or streaming, throughout generation.
+            **kwargs: Arbitrary additional keyword arguments. These are usually passed
+                to the model provider API call.
+
+        Returns:
+            An LLMResult, which contains a list of candidate Generations for each input
+                prompt and additional model provider-specific output.
+        """
+	
+	...
+	
+	def generate_prompt(
+        self,
+        prompts: List[PromptValue],
+        stop: Optional[List[str]] = None,
+        callbacks: Callbacks = None,
+        **kwargs: Any,
+    ) -> LLMResult:
+        prompt_messages = [p.to_messages() for p in prompts]
+        return self.generate(prompt_messages, stop=stop, callbacks=callbacks, **kwargs)
+	 </pre>
+	 - 'SimpleChatModel'.
+	 <pre>
+	class SimpleChatModel(BaseChatModel):
+    """Simplified implementation for a chat model to inherit from."""
+
+    def _generate(
+        self,
+        messages: List[BaseMessage],
+        stop: Optional[List[str]] = None,
+        run_manager: Optional[CallbackManagerForLLMRun] = None,
+        **kwargs: Any,
+    ) -> ChatResult:
+        output_str = self._call(messages, stop=stop, run_manager=run_manager, **kwargs)
+        message = AIMessage(content=output_str)
+        generation = ChatGeneration(message=message)
+        return ChatResult(generations=[generation])
+
+    @abstractmethod
+    def _call(
+        self,
+        messages: List[BaseMessage],
+        stop: Optional[List[str]] = None,
+        run_manager: Optional[CallbackManagerForLLMRun] = None,
+        **kwargs: Any,
+    ) -> str:
+        """Simpler interface."""
+	 </pre>
  - [libs/core/langchain_core/language_models/fake_chat_models.py](https://github.com/langchain-ai/langchain/blob/master/libs/core/langchain_core/language_models/fake_chat_models.py)
  - [libs/community/langchain_community/chat_models/fake.py](https://github.com/langchain-ai/langchain/blob/master/libs/community/langchain_community/chat_models/fake.py)
  - [libs/community/langchain_community/chat_models/human.py](https://github.com/langchain-ai/langchain/blob/master/libs/community/langchain_community/chat_models/human.py)
