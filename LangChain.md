@@ -303,8 +303,8 @@ Voy a empezar mayormente por el 2º (con algunas excepciones); como he dicho, es
    Es igual al anterior (el del paquete "core"), y supongo que lo han copiado desde allí para (en alguna versión) eliminar el anterior.
  - [libs/community/langchain_community/llms/human.py](https://github.com/langchain-ai/langchain/blob/master/libs/community/langchain_community/llms/human.py)
    Al igual que el "fake"/falso, este "LLM" tampoco es un LLM propiamente dicho (al menos no "artificial"; este es biológico, jeje) sino que las respuestas son introducidas por el usuario cuando esto es ejecutado. Por tanto, es la 2ª implementación, de una subclase de la clase LLM, más simple. Como es muy corto, y es un buen ejemplo (ni siquiera tiene función asíncrona), aquí pongo todo su código (excepto la importación de módulos).
-   <pre>
-   def _display_prompt(prompt: str) -> None:
+<pre>
+def _display_prompt(prompt: str) -> None:
     """Displays the given prompt to the user."""
     print(f"\n{prompt}")  # noqa: T201
 
