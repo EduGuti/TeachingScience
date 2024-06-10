@@ -503,7 +503,7 @@ class HumanInputLLM(LLM):
  - [libs/community/langchain_community/llms/gpt4all.py](https://github.com/langchain-ai/langchain/blob/master/libs/community/langchain_community/llms/gpt4all.py)
  - [libs/community/langchain_community/llms/huggingface_hub.py](https://github.com/langchain-ai/langchain/blob/master/libs/community/langchain_community/llms/huggingface_hub.py)
  - [libs/community/langchain_community/llms/huggingface_pipeline.py](https://github.com/langchain-ai/langchain/blob/master/libs/community/langchain_community/llms/huggingface_pipeline.py)
- - [langchain_community/llms/huggingface_text_gen_inference.py](https://github.com/langchain-ai/langchain/blob/master/libs/community/langchain_community/llms/huggingface_text_gen_inference.py)
+ - [libs/community/langchain_community/llms/huggingface_text_gen_inference.py](https://github.com/langchain-ai/langchain/blob/master/libs/community/langchain_community/llms/huggingface_text_gen_inference.py)
  - [libs/community/langchain_community/llms/huggingface_endpoint.py](https://github.com/langchain-ai/langchain/blob/master/libs/community/langchain_community/llms/huggingface_endpoint.py)
  - [libs/community/langchain_community/llms/llamacpp.py](https://github.com/langchain-ai/langchain/blob/master/libs/community/langchain_community/llms/llamacpp.py)
  - [libs/community/langchain_community/llms/llamafile.py](https://github.com/langchain-ai/langchain/blob/master/libs/community/langchain_community/llms/llamafile.py)
@@ -514,21 +514,159 @@ class HumanInputLLM(LLM):
  - [libs/community/langchain_community/chat_models/huggingface.py](https://github.com/langchain-ai/langchain/blob/master/libs/community/langchain_community/chat_models/huggingface.py)
  - [libs/community/langchain_community/chat_models/gpt_router.py](https://github.com/langchain-ai/langchain/blob/master/libs/community/langchain_community/chat_models/gpt_router.py)
  - [libs/community/langchain_community/chat_models/meta.py](https://github.com/langchain-ai/langchain/blob/master/libs/community/langchain_community/chat_models/meta.py)
+ - [libs/core/langchain_core/messages/base.py](https://github.com/langchain-ai/langchain/blob/master/libs/core/langchain_core/messages/base.py). Entre otras cosas, tiene las clases *BaseMessage(Serializable)* (<q>Messages are the inputs and outputs of ChatModels.</q>) y *BaseMessageChunk(BaseMessage)*.
+ - [libs/core/langchain_core/messages/human.py](https://github.com/langchain-ai/langchain/blob/master/libs/core/langchain_core/messages/human.py)
+ - [libs/core/langchain_core/messages/chat.py](https://github.com/langchain-ai/langchain/blob/master/libs/core/langchain_core/messages/chat.py). <q>Message that can be assigned an arbitrary speaker (i.e. role).</q>.
+ - [libs/core/langchain_core/messages/tool.py](https://github.com/langchain-ai/langchain/blob/master/libs/core/langchain_core/messages/tool.py). <q>Message for passing the result of executing a tool back to a model.</q>.
+ - [libs/core/langchain_core/messages/utils.py](https://github.com/langchain-ai/langchain/blob/master/libs/core/langchain_core/messages/utils.py). Tiene 7 funciones para gestionar mensajes.
+ - [libs/core/langchain_core/chat_history.py](https://github.com/langchain-ai/langchain/blob/master/libs/core/langchain_core/chat_history.py). Tiene la siguiente cabecera, y las siguientes 2 clases (de las cuales la 2ª la pongo entera por ser corta y un buen ejemplo).
+<pre>
+**Chat message history** stores a history of the message interactions in a chat.
+
+
+**Class hierarchy:**
+
+.. code-block::
+
+    BaseChatMessageHistory --> <name>ChatMessageHistory  # Examples: FileChatMessageHistory, PostgresChatMessageHistory
+
+**Main helpers:**
+
+.. code-block::
+
+    AIMessage, HumanMessage, BaseMessage
+
+...
+
+class BaseChatMessageHistory(ABC):
+    """Abstract base class for storing chat message history.
+
+    Implementations guidelines:
+
+    Implementations are expected to over-ride all or some of the following methods:
+
+    * add_messages: sync variant for bulk addition of messages
+    * aadd_messages: async variant for bulk addition of messages
+    * messages: sync variant for getting messages
+    * aget_messages: async variant for getting messages
+    * clear: sync variant for clearing messages
+    * aclear: async variant for clearing messages
+
+    add_messages contains a default implementation that calls add_message
+    for each message in the sequence. This is provided for backwards compatibility
+    with existing implementations which only had add_message.
+
+    Async variants all have default implementations that call the sync variants.
+    Implementers can choose to over-ride the async implementations to provide
+    truly async implementations.
+
+    Usage guidelines:
+
+    When used for updating history, users should favor usage of `add_messages`
+    over `add_message` or other variants like `add_user_message` and `add_ai_message`
+    to avoid unnecessary round-trips to the underlying persistence layer.
+
+    Example: Shows a default implementation.
+
+        .. code-block:: python
+
+            class FileChatMessageHistory(BaseChatMessageHistory):
+                storage_path:  str
+                session_id: str
+
+               @property
+               def messages(self):
+                   with open(os.path.join(storage_path, session_id), 'r:utf-8') as f:
+                       messages = json.loads(f.read())
+                    return messages_from_dict(messages)
+
+               def add_messages(self, messages: Sequence[BaseMessage]) -> None:
+                   all_messages = list(self.messages) # Existing messages
+                   all_messages.extend(messages) # Add new messages
+
+                   serialized = [message_to_dict(message) for message in all_messages]
+                   # Can be further optimized by only writing new messages
+                   # using append mode.
+                   with open(os.path.join(storage_path, session_id), 'w') as f:
+                       json.dump(f, messages)
+
+               def clear(self):
+                   with open(os.path.join(storage_path, session_id), 'w') as f:
+                       f.write("[]")
+    """
+
+    messages: List[BaseMessage]
+    """A property or attribute that returns a list of messages.
+
+    In general, getting the messages may involve IO to the underlying
+    persistence layer, so this operation is expected to incur some
+    latency.
+    """
+
+...
+
+class InMemoryChatMessageHistory(BaseChatMessageHistory, BaseModel):
+    """In memory implementation of chat message history.
+
+    Stores messages in an in memory list.
+    """
+
+    messages: List[BaseMessage] = Field(default_factory=list)
+
+    async def aget_messages(self) -> List[BaseMessage]:
+        return self.messages
+
+    def add_message(self, message: BaseMessage) -> None:
+        """Add a self-created message to the store"""
+        self.messages.append(message)
+
+    async def aadd_messages(self, messages: Sequence[BaseMessage]) -> None:
+        """Add messages to the store"""
+        self.add_messages(messages)
+
+    def clear(self) -> None:
+        self.messages = []
+
+    async def aclear(self) -> None:
+        self.clear()
+</pre>
  - [libs/community/langchain_community/chat_message_histories/file.py](https://github.com/langchain-ai/langchain/blob/master/libs/community/langchain_community/chat_message_histories/file.py)
  - [libs/community/langchain_community/chat_message_histories/mongodb.py](https://github.com/langchain-ai/langchain/blob/master/libs/community/langchain_community/chat_message_histories/mongodb.py)
  - [libs/community/langchain_community/chat_message_histories/postgres.py](https://github.com/langchain-ai/langchain/blob/master/libs/community/langchain_community/chat_message_histories/postgres.py)
  - [libs/community/langchain_community/chat_message_histories/neo4j.py](https://github.com/langchain-ai/langchain/blob/master/libs/community/langchain_community/chat_message_histories/neo4j.py)
  - [libs/community/langchain_community/chat_message_histories/redis.py](https://github.com/langchain-ai/langchain/blob/master/libs/community/langchain_community/chat_message_histories/redis.py)
  - [libs/community/langchain_community/chat_message_histories/sql.py](https://github.com/langchain-ai/langchain/blob/master/libs/community/langchain_community/chat_message_histories/sql.py)
+ - [libs/core/langchain_core/chat_sessions.py](https://github.com/langchain-ai/langchain/blob/master/libs/core/langchain_core/chat_sessions.py). <q>**Chat Sessions** are a collection of messages and function calls.</q>. Sólo tiene la siguiente clase.
+<pre>
+class ChatSession(TypedDict, total=False):
+    """Chat Session represents a single
+    conversation, channel, or other group of messages."""
+
+    messages: Sequence[BaseMessage]
+    """The LangChain chat messages loaded from the source."""
+    functions: Sequence[dict]
+    """The function calling specs for the messages."""
+</pre>
+ - [libs/core/langchain_core/chat_loaders.py](https://github.com/langchain-ai/langchain/blob/master/libs/core/langchain_core/chat_loaders.py). Sólo tiene la siguiente clase.
+<pre>
+class BaseChatLoader(ABC):
+    """Base class for chat loaders."""
+
+    @abstractmethod
+    def lazy_load(self) -> Iterator[ChatSession]:
+        """Lazy load the chat sessions."""
+
+    def load(self) -> List[ChatSession]:
+        """Eagerly load the chat sessions into memory."""
+        return list(self.lazy_load())
+</pre>
  - [libs/community/langchain_community/chat_loaders/utils.py](https://github.com/langchain-ai/langchain/blob/master/libs/community/langchain_community/chat_loaders/utils.py)
  - [libs/community/langchain_community/chat_loaders/gmail.py](https://github.com/langchain-ai/langchain/blob/master/libs/community/langchain_community/chat_loaders/gmail.py)
  - [libs/community/langchain_community/chat_loaders/telegram.py](https://github.com/langchain-ai/langchain/blob/master/libs/community/langchain_community/chat_loaders/telegram.py)
  - [libs/community/langchain_community/chat_loaders/whatsapp.py](https://github.com/langchain-ai/langchain/blob/master/libs/community/langchain_community/chat_loaders/whatsapp.py)
- - [libs/community/langchain_community/agent_toolkits/sql/base.py](https://github.com/langchain-ai/langchain/blob/master/libs/community/langchain_community/agent_toolkits/sql/base.py)
- - [libs/community/langchain_community/agent_toolkits/sql/prompt.py](https://github.com/langchain-ai/langchain/blob/master/libs/community/langchain_community/agent_toolkits/sql/prompt.py)
- - [libs/community/langchain_community/agent_toolkits/sql/toolkit.py](https://github.com/langchain-ai/langchain/blob/master/libs/community/langchain_community/agent_toolkits/sql/toolkit.py)
- - [libs/community/langchain_community/agent_toolkits/playwright/toolkit.py](https://github.com/langchain-ai/langchain/blob/master/libs/community/langchain_community/agent_toolkits/playwright/toolkit.py)
  - [libs/community/langchain_community/cache.py](https://github.com/langchain-ai/langchain/blob/master/libs/community/langchain_community/cache.py)
+ - [core/langchain_core/documents/base.py](https://github.com/langchain-ai/langchain/blob/master/libs/core/langchain_core/documents/base.py). Sólo tiene la clase *Document(Serializable)* (<q>Class for storing a piece of text and associated metadata.</q>).
+ - [libs/core/langchain_core/documents/compressor.py](https://github.com/langchain-ai/langchain/blob/master/libs/core/langchain_core/documents/compressor.py). Sólo tiene la clase *BaseDocumentCompressor(BaseModel, ABC)* (<q>Base class for document compressors.</q>).
  - [libs/community/langchain_community/utilities/wikipedia.py](https://github.com/langchain-ai/langchain/blob/master/libs/community/langchain_community/utilities/wikipedia.py)
  - [libs/community/langchain_community/utilities/wikidata.py](https://github.com/langchain-ai/langchain/blob/master/libs/community/langchain_community/utilities/wikidata.py)
  - [libs/community/langchain_community/utilities/stackexchange.py](https://github.com/langchain-ai/langchain/blob/master/libs/community/langchain_community/utilities/stackexchange.py)
@@ -543,6 +681,26 @@ class HumanInputLLM(LLM):
  - [libs/community/langchain_community/utilities/github.py](https://github.com/langchain-ai/langchain/blob/master/libs/community/langchain_community/utilities/github.py)
  - [libs/community/langchain_community/utilities/openweathermap.py](https://github.com/langchain-ai/langchain/blob/master/libs/community/langchain_community/utilities/openweathermap.py)
  - [libs/community/langchain_community/utilities/pubmed.py](https://github.com/langchain-ai/langchain/blob/master/libs/community/langchain_community/utilities/pubmed.py)
+ - [libs/core/langchain_core/tools.py](https://github.com/langchain-ai/langchain/blob/master/libs/core/langchain_core/tools.py). Tiene la siguiente cabecera, y entre otras cosas tiene las clases *BaseTool(RunnableSerializable[Union[str, Dict], Any])* (jerarquía de métodos (sólo los principales): *invoke*->*run*->*_run* y este último debe estar implementado en cada uno de sus hijos), *Tool(BaseTool)*, * StructuredTool(BaseTool)* y *BaseToolkit(BaseModel, ABC)*.
+<pre>
+**Tools** are classes that an Agent uses to interact with the world.
+
+Each tool has a **description**. Agent uses the description to choose the right
+tool for the job.
+
+**Class hierarchy:**
+
+.. code-block::
+
+    RunnableSerializable --> BaseTool --> <name>Tool  # Examples: AIPluginTool, BaseGraphQLTool
+                                          <name>      # Examples: BraveSearch, HumanInputRun
+
+**Main helpers:**
+
+.. code-block::
+
+    CallbackManagerForToolRun, AsyncCallbackManagerForToolRun
+</pre>
  - [libs/community/langchain_community/tools/wikipedia/tool.py](https://github.com/langchain-ai/langchain/blob/master/libs/community/langchain_community/tools/wikipedia/tool.py)
  - [libs/community/langchain_community/tools/wikidata/tool.py](https://github.com/langchain-ai/langchain/blob/master/libs/community/langchain_community/tools/wikidata/tool.py)
  - [libs/community/langchain_community/tools/sql_database/prompt.py](https://github.com/langchain-ai/langchain/blob/master/libs/community/langchain_community/tools/sql_database/prompt.py)
@@ -552,6 +710,10 @@ class HumanInputLLM(LLM):
  - [libs/community/langchain_community/tools/json/tool.py](https://github.com/langchain-ai/langchain/blob/master/libs/community/langchain_community/tools/json/tool.py)
  - [libs/community/langchain_community/tools/requests/tool.py](https://github.com/langchain-ai/langchain/blob/master/libs/community/langchain_community/tools/requests/tool.py)
  - [libs/community/langchain_community/tools/playwright](https://github.com/langchain-ai/langchain/tree/master/libs/community/langchain_community/tools/playwright) (en este directorio a día 2024-05-01 hay 10 ficheros)
+ - [libs/community/langchain_community/agent_toolkits/sql/base.py](https://github.com/langchain-ai/langchain/blob/master/libs/community/langchain_community/agent_toolkits/sql/base.py)
+ - [libs/community/langchain_community/agent_toolkits/sql/prompt.py](https://github.com/langchain-ai/langchain/blob/master/libs/community/langchain_community/agent_toolkits/sql/prompt.py)
+ - [libs/community/langchain_community/agent_toolkits/sql/toolkit.py](https://github.com/langchain-ai/langchain/blob/master/libs/community/langchain_community/agent_toolkits/sql/toolkit.py)
+ - [libs/community/langchain_community/agent_toolkits/playwright/toolkit.py](https://github.com/langchain-ai/langchain/blob/master/libs/community/langchain_community/agent_toolkits/playwright/toolkit.py)
  - [libs/community/langchain_community/document_loaders/blob_loaders](https://github.com/langchain-ai/langchain/tree/master/libs/community/langchain_community/document_loaders/blob_loaders) (4 ficheros)
  - [libs/community/langchain_community/document_loaders/parsers](https://github.com/langchain-ai/langchain/tree/master/libs/community/langchain_community/document_loaders/parsers) (11 ficheros y 2 subdirectorios)
  - [libs/community/langchain_community/document_loaders/parsers/html/bs4.py](https://github.com/langchain-ai/langchain/blob/master/libs/community/langchain_community/document_loaders/parsers/html/bs4.py)
@@ -571,12 +733,99 @@ class HumanInputLLM(LLM):
  - [libs/community/langchain_community/embeddings/huggingface_hub.py](https://github.com/langchain-ai/langchain/blob/master/libs/community/langchain_community/embeddings/huggingface_hub.py)
  - [libs/community/langchain_community/embeddings/llamacpp.py](https://github.com/langchain-ai/langchain/blob/master/libs/community/langchain_community/embeddings/llamacpp.py)
  - [libs/community/langchain_community/embeddings/llamafile.py](https://github.com/langchain-ai/langchain/blob/master/libs/community/langchain_community/embeddings/llamafile.py)
+ - [libs/core/langchain_core/retrievers.py](https://github.com/langchain-ai/langchain/blob/master/libs/core/langchain_core/retrievers.py). Tiene la siguiente cabecera y la clase *BaseRetriever* (de la cual aquí pongo su cabecera).
+<pre>
+**Retriever** class returns Documents given a text **query**.
+
+It is more general than a vector store. A retriever does not need to be able to
+store documents, only to return (or retrieve) it. Vector stores can be used as
+the backbone of a retriever, but there are other types of retrievers as well.
+
+**Class hierarchy:**
+
+.. code-block::
+
+    BaseRetriever --> <name>Retriever  # Examples: ArxivRetriever, MergerRetriever
+
+**Main helpers:**
+
+.. code-block::
+
+    RetrieverInput, RetrieverOutput, RetrieverLike, RetrieverOutputLike,
+    Document, Serializable, Callbacks,
+    CallbackManagerForRetrieverRun, AsyncCallbackManagerForRetrieverRun
+</pre>
+<pre>
+class BaseRetriever(RunnableSerializable[RetrieverInput, RetrieverOutput], ABC):
+    """Abstract base class for a Document retrieval system.
+
+
+    A retrieval system is defined as something that can take string queries and return
+    the most 'relevant' Documents from some source.
+
+    Usage:
+
+    A retriever follows the standard Runnable interface, and should be used
+    via the standard runnable methods of `invoke`, `ainvoke`, `batch`, `abatch`.
+
+    Implementation:
+
+    When implementing a custom retriever, the class should implement
+    the `_get_relevant_documents` method to define the logic for retrieving documents.
+
+    Optionally, an async native implementations can be provided by overriding the
+    `_aget_relevant_documents` method.
+
+    Example: A retriever that returns the first 5 documents from a list of documents
+
+        .. code-block:: python
+
+            from langchain_core import Document, BaseRetriever
+            from typing import List
+
+            class SimpleRetriever(BaseRetriever):
+                docs: List[Document]
+                k: int = 5
+
+                def _get_relevant_documents(self, query: str) -> List[Document]:
+                    \"\"\"Return the first k documents from the list of documents\"\"\"
+                    return self.docs[:self.k]
+
+                async def _aget_relevant_documents(self, query: str) -> List[Document]:
+                    \"\"\"(Optional) async native implementation.\"\"\"
+                    return self.docs[:self.k]
+
+    Example: A simple retriever based on a scitkit learn vectorizer
+
+        .. code-block:: python
+
+            from sklearn.metrics.pairwise import cosine_similarity
+
+            class TFIDFRetriever(BaseRetriever, BaseModel):
+                vectorizer: Any
+                docs: List[Document]
+                tfidf_array: Any
+                k: int = 4
+
+                class Config:
+                    arbitrary_types_allowed = True
+
+                def _get_relevant_documents(self, query: str) -> List[Document]:
+                    # Ip -- (n_docs,x), Op -- (n_docs,n_Feats)
+                    query_vec = self.vectorizer.transform([query])
+                    # Op -- (n_docs,1) -- Cosine Sim with each doc
+                    results = cosine_similarity(self.tfidf_array, query_vec).reshape((-1,))
+                    return [self.docs[i] for i in results.argsort()[-self.k :][::-1]]
+    """  # noqa: E501
+</pre>
  - [libs/community/langchain_community/retrievers/knn.py](https://github.com/langchain-ai/langchain/blob/master/libs/community/langchain_community/retrievers/knn.py)
  - [libs/community/langchain_community/retrievers/svm.py](https://github.com/langchain-ai/langchain/blob/master/libs/community/langchain_community/retrievers/svm.py)
  - [libs/community/langchain_community/retrievers/llama_index.py](https://github.com/langchain-ai/langchain/blob/master/libs/community/langchain_community/retrievers/llama_index.py)
  - [libs/community/langchain_community/retrievers/wikipedia.py](https://github.com/langchain-ai/langchain/blob/master/libs/community/langchain_community/retrievers/wikipedia.py)
  - [libs/community/langchain_community/retrievers/arxiv.py](https://github.com/langchain-ai/langchain/blob/master/libs/community/langchain_community/retrievers/arxiv.py)
  - [libs/community/langchain_community/retrievers/pubmed.py](https://github.com/langchain-ai/langchain/blob/master/libs/community/langchain_community/retrievers/pubmed.py)
+ - [libs/core/langchain_core/runnables](https://github.com/langchain-ai/langchain/tree/master/libs/core/langchain_core/runnables) (a día 2024-06-08 tiene 17 ficheros)
+ - [libs/core/langchain_core/prompts](https://github.com/langchain-ai/langchain/tree/master/libs/core/langchain_core/prompts) (a día 2024-06-08 tiene 11 ficheros)
  - [libs/community/langchain_community/utils](https://github.com/langchain-ai/langchain/tree/master/libs/community/langchain_community/utils) (a día 2024-05-01 contiene 6 ficheros)
  - [libs/community/langchain_community/output_parsers](https://github.com/langchain-ai/langchain/tree/master/libs/community/langchain_community/output_parsers) (a día 2024-05-01 contiene 3 ficheros)
  - [libs/community/langchain_community/document_compressors](https://github.com/langchain-ai/langchain/tree/master/libs/community/langchain_community/document_compressors) (a día 2024-05-01 contiene 4 ficheros)
@@ -605,6 +854,36 @@ class HumanInputLLM(LLM):
  - [libs/community/langchain_community/example_selectors/ngram_overlap.py](https://github.com/langchain-ai/langchain/blob/master/libs/community/langchain_community/example_selectors/ngram_overlap.py)
  - [libs/community/langchain_community/graphs](https://github.com/langchain-ai/langchain/tree/master/libs/community/langchain_community/graphs) (a día 2024-05-01 tiene 18 ficheros)
  - [libs/community/langchain_community/vectorstores](https://github.com/langchain-ai/langchain/tree/master/libs/community/langchain_community/vectorstores) (desde el día 2024-02-01 ya tengo una sección sobre este tema, y es la siguiente en esta página web)
+ - [libs/core/langchain_core/agents.py](https://github.com/langchain-ai/langchain/blob/master/libs/core/langchain_core/agents.py). Contiene las clases *AgentAction*, *AgentActionMessageLog*, *AgentStep* y *AgentFinish*, y las funciones *_convert_agent_action_to_messages*, *_convert_agent_observation_to_messages* y *_create_function_message*. Su cabecera es la siguiente.
+<pre>
+**Agent** is a class that uses an LLM to choose a sequence of actions to take.
+
+In Chains, a sequence of actions is hardcoded. In Agents,
+a language model is used as a reasoning engine to determine which actions
+to take and in which order.
+
+Agents select and use **Tools** and **Toolkits** for actions.
+
+**Class hierarchy:**
+
+.. code-block::
+
+    BaseSingleActionAgent --> LLMSingleActionAgent
+                              OpenAIFunctionsAgent
+                              XMLAgent
+                              Agent --> <name>Agent  # Examples: ZeroShotAgent, ChatAgent
+
+
+    BaseMultiActionAgent  --> OpenAIMultiFunctionsAgent
+
+
+**Main helpers:**
+
+.. code-block::
+
+    AgentType, AgentExecutor, AgentOutputParser, AgentExecutorIterator,
+    AgentAction, AgentFinish, AgentStep
+</pre>
 
 ## Uso de vectores de características
 
