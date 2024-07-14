@@ -913,6 +913,8 @@ A día 2024-02-01, del [código fuente de la gestión, de sistemas de almacenami
  - [chroma.py](https://github.com/langchain-ai/langchain/blob/master/libs/community/langchain_community/vectorstores/chroma.py)
  - [qdrant.py](https://github.com/langchain-ai/langchain/blob/master/libs/community/langchain_community/vectorstores/qdrant.py)
 
+Son subclases de la clase [VectorStore](https://github.com/langchain-ai/langchain/blob/master/libs/core/langchain_core/vectorstores/base.py#L70).
+
 ### Con FAISS (de Meta AI)
 
 A continuación voy a poner un esquema de las principales clases, y métodos, de un ejemplo de caso de uso de *LangChain* con *FAISS*.
@@ -927,7 +929,7 @@ de la base de datos va a depender de si es creada desde cero, o de si vamos a a�
 nuevos textos y vectores, y finalmente sobreescribirla (obviamente también existe la posibilidad de crear nuevos ficheros, pero eso sería redundante; existe la posibilidad de dividirla en varios ficheros, por motivos
 de eficiencia, pero eso es un método más avanzado y que por ahora no voy a describir aquí).
 
-<pre>
+```python
   db_name = "texts_db"
   vectordb_exist = os.path.exists(db_name+".faiss")
   db = None
@@ -939,14 +941,14 @@ de eficiencia, pero eso es un método más avanzado y que por ahora no voy a des
       db.add_texts(texts)
   # En ambos casos, hay que guardar la base de datos a disco.
   db.save_local(".", db_name)
-</pre>
+```
 
 A continuación pongo un esquema (no completo, sino sólo de los métodos que me parecen más relevantes) con las dependencias de esas 4 funciones usadas para crear ese almacenamiento de vectores.
 Aquí no pongo la descripción, de cada método/clase y que está en el código fuente, para que este esquema ocupe menos y porque es posible verlo siguiendo el correspondiente enlace.
 AVISO: Los enlaces indican la línea en la que el correspondiente métido está definido, en el código fuente de *LangChain*, a día 2024-01-30, pero puede ser que cambien eso y yo no voy a estar muy pendiente de actualizar esto.
 WIP:
- - [from_texts](https://github.com/langchain-ai/langchain/blob/master/libs/community/langchain_community/vectorstores/faiss.py#L933)
-   <pre>
+ - **[from_texts](https://github.com/langchain-ai/langchain/blob/master/libs/community/langchain_community/vectorstores/faiss.py#L933)**
+   ```python
     @classmethod
     def from_texts(
         cls,
@@ -965,9 +967,43 @@ WIP:
             ids=ids,
             **kwargs,
         )
-   </pre>
- - [load_local](https://github.com/langchain-ai/langchain/blob/master/libs/community/langchain_community/vectorstores/faiss.py#L1085)
-   <pre>
+   ```
+   - [__from](https://github.com/langchain-ai/langchain/blob/master/libs/community/langchain_community/vectorstores/faiss.py#L872)
+    ```python
+    @classmethod
+    def __from(
+        cls,
+        texts: Iterable[str],
+        embeddings: List[List[float]],
+        embedding: Embeddings,
+        metadatas: Optional[Iterable[dict]] = None,
+        ids: Optional[List[str]] = None,
+        normalize_L2: bool = False,
+        distance_strategy: DistanceStrategy = DistanceStrategy.EUCLIDEAN_DISTANCE,
+        **kwargs: Any,
+    ) -> FAISS:
+        faiss = dependable_faiss_import()
+        if distance_strategy == DistanceStrategy.MAX_INNER_PRODUCT:
+            index = faiss.IndexFlatIP(len(embeddings[0]))
+        else:
+            # Default to L2, currently other metric types not initialized.
+            index = faiss.IndexFlatL2(len(embeddings[0]))
+        docstore = kwargs.pop("docstore", InMemoryDocstore())
+        index_to_docstore_id = kwargs.pop("index_to_docstore_id", {})
+        vecstore = cls(
+            embedding,
+            index,
+            docstore,
+            index_to_docstore_id,
+            normalize_L2=normalize_L2,
+            distance_strategy=distance_strategy,
+            **kwargs,
+        )
+        vecstore.__add(texts, embeddings, metadatas=metadatas, ids=ids)
+        return vecstore
+    ```
+ - **[load_local](https://github.com/langchain-ai/langchain/blob/master/libs/community/langchain_community/vectorstores/faiss.py#L1085)**
+   ```python
     @classmethod
     def load_local(
         cls,
@@ -987,9 +1023,10 @@ WIP:
         with open(path / "{index_name}.pkl".format(index_name=index_name), "rb") as f:
             docstore, index_to_docstore_id = pickle.load(f)
         return cls(embeddings, index, docstore, index_to_docstore_id, **kwargs)
-   </pre>
- - [add_texts](https://github.com/langchain-ai/langchain/blob/master/libs/community/langchain_community/vectorstores/faiss.py#L207)
-   <pre>
+   ```
+   [dependable_faiss_import](https://github.com/langchain-ai/langchain/blob/master/libs/community/langchain_community/vectorstores/faiss.py#L38) simplemente <q>Import faiss if available, otherwise raise error. If FAISS_NO_AVX2 environment variable is set, it will be considered to load FAISS with no AVX2 optimization.</q>.
+ - **[add_texts](https://github.com/langchain-ai/langchain/blob/master/libs/community/langchain_community/vectorstores/faiss.py#L207)**
+   ```python
      def add_texts(
         self,
         texts: Iterable[str],
@@ -1000,9 +1037,9 @@ WIP:
         texts = list(texts)
         embeddings = self._embed_documents(texts)
         return self.__add(texts, embeddings, metadatas=metadatas, ids=ids)
-   </pre>
- - [save_local](https://github.com/langchain-ai/langchain/blob/master/libs/community/langchain_community/vectorstores/faiss.py#L1063)
-   <pre>
+   ```
+ - **[save_local](https://github.com/langchain-ai/langchain/blob/master/libs/community/langchain_community/vectorstores/faiss.py#L1063)**
+   ```python
      def save_local(self, folder_path: str, index_name: str = "index") -> None:
         path = Path(folder_path)
         path.mkdir(exist_ok=True, parents=True)
@@ -1016,4 +1053,4 @@ WIP:
         # save docstore and index_to_docstore_id
         with open(path / "{index_name}.pkl".format(index_name=index_name), "wb") as f:
             pickle.dump((self.docstore, self.index_to_docstore_id), f)
-   </pre>
+   ```
