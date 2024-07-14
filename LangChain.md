@@ -1,5 +1,3 @@
-# LangChain
-
 ## Introducción
 
 Cuando conocí *LangChain*, me gustó porque me permitía, con poco código, empezar a usar LLMs locales, cuando yo aún no sabía mucho sobre ese tema. Y luego, al conocerlo un poco mejor, me gustó toda la parte de RAG, ya que tenía implementada la carga de muchos tipos de documentos, e incluso facilitaba "scraping" de varios sitios webes. Pero a día 2024-05-01, y desde hace ya cierto tiempo, me parece difícil de usar para muchos casos de uso, y ya no digamos si quiero entender bien lo que internamente está haciendo, o añadir alguna funcionalidad, ya que su código me resulta tremendamente confuso (no entiendo el por qué de muchas cosas, incluyendo el motivo por el que muchas clases existen, ni la organización de sus directorios; no digo que no tengan sentido (no lo sé), pero no es nada intuitivo para el que no ha estado en su creación desde el principio de todo, e incluso sabiendo bastante sobre LLMs). Por todo eso, quiero ir documentando aquí (poco a poco; WIP, jeje) ese código.
@@ -969,39 +967,83 @@ WIP:
         )
    ```
    - [__from](https://github.com/langchain-ai/langchain/blob/master/libs/community/langchain_community/vectorstores/faiss.py#L872)
-    ```python
-    @classmethod
-    def __from(
-        cls,
-        texts: Iterable[str],
-        embeddings: List[List[float]],
-        embedding: Embeddings,
-        metadatas: Optional[Iterable[dict]] = None,
-        ids: Optional[List[str]] = None,
-        normalize_L2: bool = False,
-        distance_strategy: DistanceStrategy = DistanceStrategy.EUCLIDEAN_DISTANCE,
-        **kwargs: Any,
-    ) -> FAISS:
-        faiss = dependable_faiss_import()
-        if distance_strategy == DistanceStrategy.MAX_INNER_PRODUCT:
-            index = faiss.IndexFlatIP(len(embeddings[0]))
-        else:
-            # Default to L2, currently other metric types not initialized.
-            index = faiss.IndexFlatL2(len(embeddings[0]))
-        docstore = kwargs.pop("docstore", InMemoryDocstore())
-        index_to_docstore_id = kwargs.pop("index_to_docstore_id", {})
-        vecstore = cls(
-            embedding,
-            index,
-            docstore,
-            index_to_docstore_id,
-            normalize_L2=normalize_L2,
-            distance_strategy=distance_strategy,
-            **kwargs,
-        )
-        vecstore.__add(texts, embeddings, metadatas=metadatas, ids=ids)
-        return vecstore
-    ```
+     ```python
+     @classmethod
+     def __from(
+         cls,
+         texts: Iterable[str],
+         embeddings: List[List[float]],
+         embedding: Embeddings,
+         metadatas: Optional[Iterable[dict]] = None,
+         ids: Optional[List[str]] = None,
+         normalize_L2: bool = False,
+         distance_strategy: DistanceStrategy = DistanceStrategy.EUCLIDEAN_DISTANCE,
+         **kwargs: Any,
+     ) -> FAISS:
+         faiss = dependable_faiss_import()
+         if distance_strategy == DistanceStrategy.MAX_INNER_PRODUCT:
+             index = faiss.IndexFlatIP(len(embeddings[0]))
+         else:
+             # Default to L2, currently other metric types not initialized.
+             index = faiss.IndexFlatL2(len(embeddings[0]))
+         docstore = kwargs.pop("docstore", InMemoryDocstore())
+         index_to_docstore_id = kwargs.pop("index_to_docstore_id", {})
+         vecstore = cls(
+             embedding,
+             index,
+             docstore,
+             index_to_docstore_id,
+             normalize_L2=normalize_L2,
+             distance_strategy=distance_strategy,
+             **kwargs,
+         )
+         vecstore.__add(texts, embeddings, metadatas=metadatas, ids=ids)
+         return vecstore
+     ```
+     - [dependable_faiss_import](https://github.com/langchain-ai/langchain/blob/master/libs/community/langchain_community/vectorstores/faiss.py#L38) simplemente <q>Import faiss if available, otherwise raise error. If FAISS_NO_AVX2 environment variable is set, it will be considered to load FAISS with no AVX2 optimization.</q>.
+     - [__add](https://github.com/langchain-ai/langchain/blob/master/libs/community/langchain_community/vectorstores/faiss.py#L168)
+       ```python
+       def __add(
+           self,
+           texts: Iterable[str],
+           embeddings: Iterable[List[float]],
+           metadatas: Optional[Iterable[dict]] = None,
+           ids: Optional[List[str]] = None,
+       ) -> List[str]:
+           faiss = dependable_faiss_import()
+
+           if not isinstance(self.docstore, AddableMixin):
+               raise ValueError(
+                   "If trying to add texts, the underlying docstore should support "
+                   f"adding items, which {self.docstore} does not"
+               )
+
+           _len_check_if_sized(texts, metadatas, "texts", "metadatas")
+           _metadatas = metadatas or ({} for _ in texts)
+           documents = [
+               Document(page_content=t, metadata=m) for t, m in zip(texts, _metadatas)
+           ]
+
+           _len_check_if_sized(documents, embeddings, "documents", "embeddings")
+           _len_check_if_sized(documents, ids, "documents", "ids")
+
+           if ids and len(ids) != len(set(ids)):
+               raise ValueError("Duplicate ids found in the ids list.")
+
+           # Add to the index.
+           vector = np.array(embeddings, dtype=np.float32)
+           if self._normalize_L2:
+               faiss.normalize_L2(vector)
+           self.index.add(vector)
+
+           # Add information to docstore and index.
+           ids = ids or [str(uuid.uuid4()) for _ in texts]
+           self.docstore.add({id_: doc for id_, doc in zip(ids, documents)})
+           starting_len = len(self.index_to_docstore_id)
+           index_to_id = {starting_len + j: id_ for j, id_ in enumerate(ids)}
+           self.index_to_docstore_id.update(index_to_id)
+           return ids
+       ```
  - **[load_local](https://github.com/langchain-ai/langchain/blob/master/libs/community/langchain_community/vectorstores/faiss.py#L1085)**
    ```python
     @classmethod
@@ -1024,7 +1066,6 @@ WIP:
             docstore, index_to_docstore_id = pickle.load(f)
         return cls(embeddings, index, docstore, index_to_docstore_id, **kwargs)
    ```
-   [dependable_faiss_import](https://github.com/langchain-ai/langchain/blob/master/libs/community/langchain_community/vectorstores/faiss.py#L38) simplemente <q>Import faiss if available, otherwise raise error. If FAISS_NO_AVX2 environment variable is set, it will be considered to load FAISS with no AVX2 optimization.</q>.
  - **[add_texts](https://github.com/langchain-ai/langchain/blob/master/libs/community/langchain_community/vectorstores/faiss.py#L207)**
    ```python
      def add_texts(
