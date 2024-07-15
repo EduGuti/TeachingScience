@@ -23,8 +23,9 @@ from langchain.schema.runnable import RunnablePassthrough
 from langchain.chains import LLMChain
 from langchain_community.llms import Ollama
 
+instruction = "You are a helpful assistant."
 prompt_template = f"""
-    ### [INST] Instruction: {self.instruction} Here is context to help:
+    ### [INST] Instruction: {instruction} Here is context to help:
 
     {{context}}
 
