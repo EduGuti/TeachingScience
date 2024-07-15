@@ -11,6 +11,42 @@ Empiezo listando los ficheros de código que me parecen más relevantes, y poco 
 
 ## LLMs, prompts y cadenas
 
+### Ejemplos de uso
+
+#### Con Ollama
+
+En este ejemplo, *db* es un "vectorstore" y es usado para obtener textos, desde una base de datos, para usarlos como contexto de la pregunta (en ese *prompt*). Para más información sobre "vector stores", mirar la última sección de esta página ("Uso de vectores de características").
+
+```python
+prompt_template = f"""
+    ### [INST] Instruction: {self.instruction} Here is context to help:
+
+    {{context}}
+
+    ### QUESTION:
+    {{question}} [/INST]
+    """
+prompt = PromptTemplate(input_variables=["context", "question"], template=prompt_template)
+llm_ollama = Ollama(model=self.llm)
+llm_chain = LLMChain(llm=llm_ollama, prompt=prompt)
+rag_chain = ({"context": db.as_retriever(), "question": RunnablePassthrough()} | llm_chain)
+print(rag_chain.invoke(question))
+```
+
+#### Con Groq
+
+Visto en [la documentación de *LangChain*](https://python.langchain.com/docs/integrations/chat/groq).
+```python
+system = "You are a helpful assistant."
+human = "{question}"
+prompt = ChatPromptTemplate.from_messages([("system", system), ("human", human)])
+chat = ChatGroq(temperature=0, model_name="mixtral-8x7b-32768")
+chain = prompt | chat
+print(chain.invoke({"question": "Tell me a joke"}))
+```
+
+### Código fuente
+
  - [libs/core/langchain_core/language_models/__init__.py](https://github.com/langchain-ai/langchain/blob/master/libs/core/langchain_core/language_models/__init__.py)
  - [libs/core/langchain_core/language_models/base.py](https://github.com/langchain-ai/langchain/blob/master/libs/core/langchain_core/language_models/base.py)
    La parte principal de este fichero es la clase *BaseLanguageModel*, de la cual a continuación pongo las partes más relevantes. Y además de eso destaco el módulo que usa por defecto para calcular los tokens (toquenizador).
