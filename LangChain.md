@@ -1004,12 +1004,14 @@ Son subclases de la clase [VectorStore](https://github.com/langchain-ai/langchai
 
 ### Con FAISS (de Meta AI)
 
-A continuación voy a poner un esquema de las principales clases, y métodos, de un ejemplo de caso de uso de *LangChain* con *FAISS*.
-El código está principalmente en el ficheor [faiss.py](https://github.com/langchain-ai/langchain/blob/master/libs/community/langchain_community/vectorstores/faiss.py), pero aquí también voy a poner a poner las dependencias 
-que me parezcan más relevantes para entender esa implementación.
+A continuación voy a poner 2 ejemplos de casos de uso de *LangChain* con *FAISS*. Tras cada uno de ellos pondré un esquema de las principales clases, y métodos, usados en ellos.
+
+El código fuente, de esta utilidad de *LangChain*, está principalmente en el fichero [faiss.py](https://github.com/langchain-ai/langchain/blob/master/libs/community/langchain_community/vectorstores/faiss.py), pero aquí también voy a poner las dependencias que me parezcan más relevantes para entender esa implementación.
 
 Para usar eso, hay que empezar ejecutando lo siguiente:
-<code lang="Python">from langchain.vectorstores import FAISS</code>
+```python
+from langchain.vectorstores import FAISS
+```
 
 Existe la posibilidad de crear una nueva base de datos sólo en memoria, pero, dado que suele ser más útil guardarla en disco para poderla volver a usar, voy a considerar este segundo caso. En este caso, la definición 
 de la base de datos va a depender de si es creada desde cero, o de si vamos a añadir más vectores a una ya existente en disco. En este último caso (si ya existe), primero hay que leerla desde disco, luego añadir los
@@ -1184,3 +1186,34 @@ WIP:
         with open(path / "{index_name}.pkl".format(index_name=index_name), "wb") as f:
             pickle.dump((self.docstore, self.index_to_docstore_id), f)
    ```
+
+#### Ejemplo a partir de lo que en *LangChain* llaman "Document"
+
+Para ilustrar mejor la necesidad (o al menos, una posible utilidad) de usar la clase *Document* en vez de directamente los textos, en este ejemplo consideramos que hay un texto muy grande que hay que trocear para que alguno, o varios, de esos trozos puedan ser usados como contexto en un "prompt" (como en los ejemplos de la sección 'LLMs, prompts y cadenas'; hacia el comienzo de esta página).
+
+```python
+from langchain.schema.document import Document
+from langchain.text_splitter import CharacterTextSplitter
+from langchain.embeddings.huggingface import HuggingFaceEmbeddings
+from langchain_community.vectorstores import FAISS
+
+text = "Un texto tochísimo."
+chunk_size=100
+chunk_overlap=0
+doc = Document(page_content=text)
+text_splitter = CharacterTextSplitter(chunk_size=chunk_size, chunk_overlap=chunk_overlap)
+chunked_documents = text_splitter.split_documents([doc])
+
+db_name = "texts_db"
+vectordb_exist = os.path.exists(db_name+".faiss")
+db = None
+
+if not vectordb_exist:
+    db = FAISS.from_documents(chunked_documents, HuggingFaceEmbeddings(model_name="sentence-transformers/all-mpnet-base-v2"))
+else:
+    db = FAISS.load_local(".", HuggingFaceEmbeddings(model_name='sentence-transformers/all-mpnet-base-v2'), db_name)
+    db.add_documents(chunked_documents)
+# En ambos casos, los nuevos datos aún están sólo en memoria RAM y, por tanto, hay que ejecutar 'save_local' para guardarlos a disco.
+db.save_local(".", db_name)
+```
+ToDo: Documentar estos 2 nuevos métodos: *from_documents* y *add_documents*.
