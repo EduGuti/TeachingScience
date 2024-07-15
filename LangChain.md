@@ -18,6 +18,11 @@ Empiezo listando los ficheros de código que me parecen más relevantes, y poco 
 En este ejemplo, *db* es un "vectorstore" y es usado para obtener textos, desde una base de datos, para usarlos como contexto de la pregunta (en ese *prompt*). Para más información sobre "vector stores", mirar la última sección de esta página ("Uso de vectores de características").
 
 ```python
+from langchain.prompts import PromptTemplate
+from langchain.schema.runnable import RunnablePassthrough
+from langchain.chains import LLMChain
+from langchain_community.llms import Ollama
+
 prompt_template = f"""
     ### [INST] Instruction: {self.instruction} Here is context to help:
 
@@ -30,13 +35,16 @@ prompt = PromptTemplate(input_variables=["context", "question"], template=prompt
 llm_ollama = Ollama(model=self.llm)
 llm_chain = LLMChain(llm=llm_ollama, prompt=prompt)
 rag_chain = ({"context": db.as_retriever(), "question": RunnablePassthrough()} | llm_chain)
-print(rag_chain.invoke(question))
+print(rag_chain.invoke("Tell me a joke"))
 ```
 
 #### Con Groq
 
 Visto en [la documentación de *LangChain*](https://python.langchain.com/docs/integrations/chat/groq).
 ```python
+from langchain_core.prompts import ChatPromptTemplate
+from langchain_groq import ChatGroq
+
 system = "You are a helpful assistant."
 human = "{question}"
 prompt = ChatPromptTemplate.from_messages([("system", system), ("human", human)])
