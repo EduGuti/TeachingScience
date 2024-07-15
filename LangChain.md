@@ -15,7 +15,7 @@ Empiezo listando los ficheros de código que me parecen más relevantes, y poco 
 
 #### Con Ollama
 
-En este ejemplo, *db* es un "vectorstore" y es usado para obtener textos, desde una base de datos, para usarlos como contexto de la pregunta (en ese *prompt*). Para más información sobre "vector stores", mirar la última sección de esta página ("Uso de vectores de características").
+En este ejemplo, *db* es un "vectorstore" y es usado para obtener textos, desde una base de datos, para usarlos como contexto de la pregunta (en ese *prompt*). Para más información sobre "vector stores", mirar la última sección de esta página ("Uso de vectores de características"). Y el LLM usado en este ejemplo es *Solar*; el listado completo está en [esta página web](https://ollama.com/library?sort=newest).
 
 ```python
 from langchain.prompts import PromptTemplate
@@ -33,7 +33,7 @@ prompt_template = f"""
     {{question}} [/INST]
     """
 prompt = PromptTemplate(input_variables=["context", "question"], template=prompt_template)
-llm_ollama = Ollama(model=self.llm)
+llm_ollama = Ollama(model="solar")
 llm_chain = LLMChain(llm=llm_ollama, prompt=prompt)
 rag_chain = ({"context": db.as_retriever(), "question": RunnablePassthrough()} | llm_chain)
 print(rag_chain.invoke("Tell me a joke"))
