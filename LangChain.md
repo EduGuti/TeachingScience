@@ -6,11 +6,15 @@ Lo primero de todo, hay que tener en cuenta que ese código (no todo, pero sí l
  - [langchain_core](https://github.com/langchain-ai/langchain/tree/master/libs/core/langchain_core)
  - [langchain_community](https://github.com/langchain-ai/langchain/tree/master/libs/community/langchain_community)
 
-Voy a empezar mayormente por el 2º (con algunas excepciones); como he dicho, esta documentación es WIP, así que es posiblel que lo acabe cambiando, pero por ahora quiero empezar por ahí porque esa parte es la más próxima al usuario final, y así por lo menos, al mirar "recetas" (tutoriales de estos cutres (porque no explican nada) y que tanto abundan), con esto será posible entender un poco de eso. Y voy a empezar poniendo un listado de ficheros de ese código (no todos, porque son muchísimos y muchos de ellos sólo son necesarios en ciertos casos de uso muy concretos/específicos), y en el orden en el que me parece más didáctico; en concreto, voy a empezar por los modelos de lenguaje, ya que es el origen, y motivación, de este proyecto, y por los "chats", ya que también es una parte importante de todo esto (ya que la gran popularidad de los LLMs ha sido consecuencia de la aparición de (ese "milagro" llamado) 'ChatGPT'). Por ahora sólo los listo, y poco a poco (a lo largo de varios días o semanas) los voy a ir comentando (o eso espero).
+Voy a empezar mayormente por el 2º (con algunas excepciones); como he dicho, esta documentación es WIP, así que es posible que lo acabe cambiando, pero por ahora quiero empezar por ahí porque esa parte es la más próxima al usuario final, y así por lo menos, al mirar "recetas" (tutoriales de estos cutres (porque no explican nada) y que tanto abundan), con esto será posible entender un poco de eso. Y voy a empezar poniendo un listado de ficheros de ese código (no todos, porque son muchísimos y muchos de ellos sólo son necesarios en ciertos casos de uso muy concretos/específicos), y en el orden en el que me parece más didáctico. En concreto, voy a empezar por los modelos de lenguaje, ya que es el origen, y motivación, de este proyecto, y por los "chats", ya que también es una parte importante de todo esto (ya que la gran popularidad de los LLMs ha sido consecuencia de la aparición de (ese "milagro" llamado) 'ChatGPT'), y los agrupo en una sección en la que también voy a poner los "prompts", ya que son imprescindibles para usar los LLMs (ya que son las entradas de estos últimos), y las cadenas ("chains"), ya que sirven para unir prompts y LLMs, y es el concepto que da nombre a esta biblioteca ("LangChain").
+Empiezo listando los ficheros de código que me parecen más relevantes, y poco a poco los voy comentando y voy poniendo los trozos de código fuente que me parecen más relevantes.
+
+## LLMs, prompts y cadenas
+
  - [libs/core/langchain_core/language_models/__init__.py](https://github.com/langchain-ai/langchain/blob/master/libs/core/langchain_core/language_models/__init__.py)
  - [libs/core/langchain_core/language_models/base.py](https://github.com/langchain-ai/langchain/blob/master/libs/core/langchain_core/language_models/base.py)
    La parte principal de este fichero es la clase *BaseLanguageModel*, de la cual a continuación pongo las partes más relevantes. Y además de eso destaco el módulo que usa por defecto para calcular los tokens (toquenizador).
-   <pre>
+   ```python
     @lru_cache(maxsize=None)  # Cache the tokenizer
     def get_tokenizer() -> Any:
         try:
@@ -82,12 +86,12 @@ Voy a empezar mayormente por el 2º (con algunas excepciones); como he dicho, es
         def get_num_tokens_from_messages(self, messages: List[BaseMessage]) -> int:
             return sum([self.get_num_tokens(get_buffer_string([m])) for m in messages])
         ...
-   </pre>
+   ```
  - [libs/core/langchain_core/language_models/llms.py](https://github.com/langchain-ai/langchain/blob/master/libs/core/langchain_core/language_models/llms.py)
    Este fichero tiene 1341 líneas a día 2024-06-04, así que, como son muchas, voy a intentar poner sólo lo más relevante y lo más resumido posible.
    Tiene 2 clases:
    - BaseLLM. Cualquier clase descendiente de esta podrá ser usada a través del método 'invoke'. Aquí ese método usa el método _convert_input para adaptar el valor del parámetro 'input', que debe ser "a PromptValue, str, or list of BaseMessages", para ser usado en el método 'generate_prompt' (como un valor de que debe ser instancia de la clase 'PromptValue' o de una descendiente de ella), que a su vez usa/(llama a) el método 'generate', que a su vez usa el método '_generate_helper', que a su vez usa el método '_generate', que a su vez usa el método '_call' (que es un método abstracto que debe ser implementado en cada clase descendiente de esta).
-   <pre>
+   ```python
    class BaseLLM(BaseLanguageModel[str], ABC):
     """Base LLM abstract interface.
 
@@ -186,9 +190,9 @@ Voy a empezar mayormente por el 2º (con algunas excepciones); como he dicho, es
 		...
 		
         return LLMResult(generations=generations, llm_output=llm_output, run=run_info)
-   </pre>
+   ```
    - LLM
-   <pre>
+   ```python
    class LLM(BaseLLM):
     """Simple interface for implementing a custom LLM.
 
@@ -260,10 +264,10 @@ Voy a empezar mayormente por el 2º (con algunas excepciones); como he dicho, es
             )
             generations.append([Generation(text=text)])
         return LLMResult(generations=generations)
-	</pre>
+   ```
  - [libs/core/langchain_core/language_models/fake.py](https://github.com/langchain-ai/langchain/blob/master/libs/core/langchain_core/language_models/fake.py)
  Como su nombre indica, no es un LLM propiamente dicho sino que simplemente tiene un listado de respuestas predefinidas. Al ser la implementación más simple de una subclase de la clase LLM, es un buen ejemplo de cómo crear subclases de esa clase. Este fichero tiene 2 clases (subclases/descendientes de la clase LLM: FakeListLLM, y FakeStreamingListLLM que es una subclase de 'FakeListLLM'), de las cuales sólo voy a poner aquí la 1ª ('FakeListLLM'; pongo todo su código excepto el método '_acall', porque, para simplificar, en esta documentación estoy ignorando el asincronismo).
- <pre>
+ ```python
  class FakeListLLM(LLM):
     """Fake LLM for testing purposes."""
 
@@ -296,12 +300,12 @@ Voy a empezar mayormente por el 2º (con algunas excepciones); como he dicho, es
     @property
     def _identifying_params(self) -> Mapping[str, Any]:
         return {"responses": self.responses}
- </pre>
+ ```
  - [libs/community/langchain_community/llms/fake.py](https://github.com/langchain-ai/langchain/blob/master/libs/community/langchain_community/llms/fake.py)
    Es igual al anterior (el del paquete "core"), y supongo que lo han copiado desde allí para (en alguna versión) eliminar el anterior.
  - [libs/community/langchain_community/llms/human.py](https://github.com/langchain-ai/langchain/blob/master/libs/community/langchain_community/llms/human.py)
    Al igual que el "fake"/falso, este "LLM" tampoco es un LLM propiamente dicho (al menos no "artificial"; este es biológico, jeje) sino que las respuestas son introducidas por el usuario cuando esto es ejecutado. Por tanto, es la 2ª implementación, de una subclase de la clase LLM, más simple. Como es muy corto, y es un buen ejemplo (ni siquiera tiene función asíncrona), aquí pongo todo su código (excepto la importación de módulos).
-<pre>
+```python
 def _display_prompt(prompt: str) -> None:
     """Displays the given prompt to the user."""
     print(f"\n{prompt}")  # noqa: T201
@@ -376,7 +380,7 @@ class HumanInputLLM(LLM):
             # are not enforced by the human themselves
             user_input = enforce_stop_tokens(user_input, stop)
         return user_input
-   </pre>
+```
  - [libs/core/langchain_core/language_models/chat_models.py](https://github.com/langchain-ai/langchain/blob/master/libs/core/langchain_core/language_models/chat_models.py)
    Este fichero tiene 2 clases: 'BaseChatModel' y 'SimpleChatModel'.
      - 'BaseChatModel'. La jerarquía de llamadas a funciones es parecida a la de la clase 'BaseModel'. A continuación pongo la jerarquía para esta clase y parte de su código (los métodos principales).
@@ -385,8 +389,8 @@ class HumanInputLLM(LLM):
 	       + generate
 		     + _generate_with_cache
 			   + _generate (método abstracto)
-	 <pre>
-	class BaseChatModel(BaseLanguageModel[BaseMessage], ABC):
+```python
+class BaseChatModel(BaseLanguageModel[BaseMessage], ABC):
     """Base class for Chat models."""
 	 
 	...
@@ -491,7 +495,7 @@ class HumanInputLLM(LLM):
         **kwargs: Any,
     ) -> str:
         """Simpler interface."""
-	 </pre>
+```
  - [libs/core/langchain_core/language_models/fake_chat_models.py](https://github.com/langchain-ai/langchain/blob/master/libs/core/langchain_core/language_models/fake_chat_models.py)
  - [libs/community/langchain_community/chat_models/fake.py](https://github.com/langchain-ai/langchain/blob/master/libs/community/langchain_community/chat_models/fake.py)
  - [libs/community/langchain_community/chat_models/human.py](https://github.com/langchain-ai/langchain/blob/master/libs/community/langchain_community/chat_models/human.py)
@@ -512,6 +516,46 @@ class HumanInputLLM(LLM):
  - [libs/community/langchain_community/chat_models/huggingface.py](https://github.com/langchain-ai/langchain/blob/master/libs/community/langchain_community/chat_models/huggingface.py)
  - [libs/community/langchain_community/chat_models/gpt_router.py](https://github.com/langchain-ai/langchain/blob/master/libs/community/langchain_community/chat_models/gpt_router.py)
  - [libs/community/langchain_community/chat_models/meta.py](https://github.com/langchain-ai/langchain/blob/master/libs/community/langchain_community/chat_models/meta.py)
+ - [libs/langchain/langchain/chains](https://github.com/langchain-ai/langchain/tree/master/libs/langchain/langchain/chains). Las **cadenas** están en este directorio. Son muchas, por lo que aquí sólo voy a ir poniendo algunos ejemplos (por ahora sólo la clase *LLMChain* (del fichero *llm.py*)).
+ - [libs/langchain/langchain/chains/llm.py](https://github.com/langchain-ai/langchain/blob/master/libs/langchain/langchain/chains/llm.py). <q>Chain that just formats a prompt and calls an LLM.</q>. Tiene la implementación de la clase *LLMChain*, cuya cabecera muestro a continuación.
+```python
+class LLMChain(Chain):
+    """Chain to run queries against LLMs.
+
+    This class is deprecated. See below for an example implementation using
+    LangChain runnables:
+
+        .. code-block:: python
+
+            from langchain_core.output_parsers import StrOutputParser
+            from langchain_core.prompts import PromptTemplate
+            from langchain_openai import OpenAI
+
+            prompt_template = "Tell me a {adjective} joke"
+            prompt = PromptTemplate(
+                input_variables=["adjective"], template=prompt_template
+            )
+            llm = OpenAI()
+            chain = prompt | llm | StrOutputParser()
+
+            chain.invoke("your adjective here")
+
+    Example:
+        .. code-block:: python
+
+            from langchain.chains import LLMChain
+            from langchain_community.llms import OpenAI
+            from langchain_core.prompts import PromptTemplate
+            prompt_template = "Tell me a {adjective} joke"
+            prompt = PromptTemplate(
+                input_variables=["adjective"], template=prompt_template
+            )
+            llm = LLMChain(llm=OpenAI(), prompt=prompt)
+    """
+```
+
+## Más utilidades de *LangChain*
+
  - [libs/core/langchain_core/load/serializable.py](https://github.com/langchain-ai/langchain/blob/master/libs/core/langchain_core/load/serializable.py). Tiene varias clases y la principal es *Serializable(BaseModel, ABC)*.
  - [libs/core/langchain_core/load/mapping.py](https://github.com/langchain-ai/langchain/blob/master/libs/core/langchain_core/load/mapping.py). Sólo tiene un largo diccionario que mapea jerarquía de clases.
  - [libs/core/langchain_core/load/dump.py](https://github.com/langchain-ai/langchain/blob/master/libs/core/langchain_core/load/dump.py). Sólo tiene las funciones *default* (<q>Return a default value for a Serializable object or a SerializedNotImplemented object.</q>), *dumps* (<q>Return a json string representation of an object.</q>) y *dumpd* (<q>Return a json dict representation of an object</q>).
@@ -522,7 +566,7 @@ class HumanInputLLM(LLM):
  - [libs/core/langchain_core/messages/tool.py](https://github.com/langchain-ai/langchain/blob/master/libs/core/langchain_core/messages/tool.py). <q>Message for passing the result of executing a tool back to a model.</q>.
  - [libs/core/langchain_core/messages/utils.py](https://github.com/langchain-ai/langchain/blob/master/libs/core/langchain_core/messages/utils.py). Tiene 7 funciones para gestionar mensajes.
  - [libs/core/langchain_core/chat_history.py](https://github.com/langchain-ai/langchain/blob/master/libs/core/langchain_core/chat_history.py). Tiene la siguiente cabecera, y las siguientes 2 clases (de las cuales la 2ª la pongo entera por ser corta y un buen ejemplo).
-<pre>
+```python
 **Chat message history** stores a history of the message interactions in a chat.
 
 
@@ -631,7 +675,7 @@ class InMemoryChatMessageHistory(BaseChatMessageHistory, BaseModel):
 
     async def aclear(self) -> None:
         self.clear()
-</pre>
+```
  - [libs/community/langchain_community/chat_message_histories/file.py](https://github.com/langchain-ai/langchain/blob/master/libs/community/langchain_community/chat_message_histories/file.py)
  - [libs/community/langchain_community/chat_message_histories/mongodb.py](https://github.com/langchain-ai/langchain/blob/master/libs/community/langchain_community/chat_message_histories/mongodb.py)
  - [libs/community/langchain_community/chat_message_histories/postgres.py](https://github.com/langchain-ai/langchain/blob/master/libs/community/langchain_community/chat_message_histories/postgres.py)
@@ -639,7 +683,7 @@ class InMemoryChatMessageHistory(BaseChatMessageHistory, BaseModel):
  - [libs/community/langchain_community/chat_message_histories/redis.py](https://github.com/langchain-ai/langchain/blob/master/libs/community/langchain_community/chat_message_histories/redis.py)
  - [libs/community/langchain_community/chat_message_histories/sql.py](https://github.com/langchain-ai/langchain/blob/master/libs/community/langchain_community/chat_message_histories/sql.py)
  - [libs/core/langchain_core/chat_sessions.py](https://github.com/langchain-ai/langchain/blob/master/libs/core/langchain_core/chat_sessions.py). <q>**Chat Sessions** are a collection of messages and function calls.</q>. Sólo tiene la siguiente clase.
-<pre>
+```python
 class ChatSession(TypedDict, total=False):
     """Chat Session represents a single
     conversation, channel, or other group of messages."""
@@ -648,9 +692,9 @@ class ChatSession(TypedDict, total=False):
     """The LangChain chat messages loaded from the source."""
     functions: Sequence[dict]
     """The function calling specs for the messages."""
-</pre>
+```
  - [libs/core/langchain_core/chat_loaders.py](https://github.com/langchain-ai/langchain/blob/master/libs/core/langchain_core/chat_loaders.py). Sólo tiene la siguiente clase.
-<pre>
+```python
 class BaseChatLoader(ABC):
     """Base class for chat loaders."""
 
@@ -661,7 +705,7 @@ class BaseChatLoader(ABC):
     def load(self) -> List[ChatSession]:
         """Eagerly load the chat sessions into memory."""
         return list(self.lazy_load())
-</pre>
+```
  - [libs/community/langchain_community/chat_loaders/utils.py](https://github.com/langchain-ai/langchain/blob/master/libs/community/langchain_community/chat_loaders/utils.py)
  - [libs/community/langchain_community/chat_loaders/gmail.py](https://github.com/langchain-ai/langchain/blob/master/libs/community/langchain_community/chat_loaders/gmail.py)
  - [libs/community/langchain_community/chat_loaders/telegram.py](https://github.com/langchain-ai/langchain/blob/master/libs/community/langchain_community/chat_loaders/telegram.py)
@@ -680,7 +724,7 @@ class BaseChatLoader(ABC):
  - [libs/community/langchain_community/utilities/github.py](https://github.com/langchain-ai/langchain/blob/master/libs/community/langchain_community/utilities/github.py). Su única clase es *GitHubAPIWrapper(BaseModel)*, que usa la biblioteca *github*. No tiene ni método *run*, ni método *load*, sino varios para hacer gestiones de repositorios (y, por tanto, **hace uso de clave/key de usuario**; obviamente, en este casi sí que sé que es gratuito ;-) ).
  - [libs/community/langchain_community/utilities/openweathermap.py](https://github.com/langchain-ai/langchain/blob/master/libs/community/langchain_community/utilities/openweathermap.py). Su única clase es *OpenWeatherMapAPIWrapper(BaseModel)*, que usa la biblioteca *pyowm* y su principal método es *run* (devuelve una cadena de texto) (no tiene método *load*). **Usa clave ("key") de ese servicio web** (no sé si es gratuito o no).
  - [libs/core/langchain_core/tools.py](https://github.com/langchain-ai/langchain/blob/master/libs/core/langchain_core/tools.py). Tiene la siguiente cabecera, y entre otras cosas tiene las clases *BaseTool(RunnableSerializable[Union[str, Dict], Any])* (jerarquía de métodos (sólo los principales): *invoke*->*run*->*_run* y este último debe estar implementado en cada uno de sus hijos), *Tool(BaseTool)*, * StructuredTool(BaseTool)* y *BaseToolkit(BaseModel, ABC)*.
-<pre>
+```python
 **Tools** are classes that an Agent uses to interact with the world.
 
 Each tool has a **description**. Agent uses the description to choose the right
@@ -698,7 +742,7 @@ tool for the job.
 .. code-block::
 
     CallbackManagerForToolRun, AsyncCallbackManagerForToolRun
-</pre>
+```
  - [libs/community/langchain_community/tools/sql_database/prompt.py](https://github.com/langchain-ai/langchain/blob/master/libs/community/langchain_community/tools/sql_database/prompt.py). Sólo tiene la plantilla que será usada para crear la descripción que el agente, a través de un LLM, leerá para saber usar la herramienta.
  - [libs/community/langchain_community/tools/sql_database/tool.py](https://github.com/langchain-ai/langchain/blob/master/libs/community/langchain_community/tools/sql_database/tool.py). Usa la clase *SQLDatabase*, del correspondiente fichero de utilidades de *LangChain*. Tiene las clases *BaseSQLDatabaseTool(BaseModel)* (<q>Base tool for interacting with a SQL database.</q>), *QuerySQLDataBaseTool(BaseSQLDatabaseTool, BaseTool)* (<q>Tool for querying a SQL database.</q>), *InfoSQLDatabaseTool(BaseSQLDatabaseTool, BaseTool)* (<q>Tool for getting metadata about a SQL database.</q>), *ListSQLDatabaseTool(BaseSQLDatabaseTool, BaseTool)* (<q>Tool for getting tables names.</q>), ** (<q></q>) y *QuerySQLCheckerTool(BaseSQLDatabaseTool, BaseTool)* (<q>Use an LLM to check if a query is correct. Adapted from https://www.patterns.app/blog/2023/01/18/crunchbot-sql-analyst-gpt/</q>); más 4 secundarias/(de apoyo) y muy pequeñas.
  - [libs/community/langchain_community/tools/human/tool.py](https://github.com/langchain-ai/langchain/blob/master/libs/community/langchain_community/tools/human/tool.py). Es una herramienta muy simple que simplemente hace una pregunta a un humano y devuelve la respuesta que el humano le escribe. La clase ahí implementada es *HumanInputRun(BaseTool)*.
@@ -740,7 +784,7 @@ tool for the job.
  - [libs/community/langchain_community/embeddings/llamacpp.py](https://github.com/langchain-ai/langchain/blob/master/libs/community/langchain_community/embeddings/llamacpp.py)
  - [libs/community/langchain_community/embeddings/llamafile.py](https://github.com/langchain-ai/langchain/blob/master/libs/community/langchain_community/embeddings/llamafile.py)
  - [libs/core/langchain_core/retrievers.py](https://github.com/langchain-ai/langchain/blob/master/libs/core/langchain_core/retrievers.py). Tiene la siguiente cabecera y la clase *BaseRetriever* (de la cual aquí pongo su cabecera).
-<pre>
+```python
 **Retriever** class returns Documents given a text **query**.
 
 It is more general than a vector store. A retriever does not need to be able to
@@ -760,8 +804,8 @@ the backbone of a retriever, but there are other types of retrievers as well.
     RetrieverInput, RetrieverOutput, RetrieverLike, RetrieverOutputLike,
     Document, Serializable, Callbacks,
     CallbackManagerForRetrieverRun, AsyncCallbackManagerForRetrieverRun
-</pre>
-<pre>
+```
+```python
 class BaseRetriever(RunnableSerializable[RetrieverInput, RetrieverOutput], ABC):
     """Abstract base class for a Document retrieval system.
 
@@ -823,7 +867,7 @@ class BaseRetriever(RunnableSerializable[RetrieverInput, RetrieverOutput], ABC):
                     results = cosine_similarity(self.tfidf_array, query_vec).reshape((-1,))
                     return [self.docs[i] for i in results.argsort()[-self.k :][::-1]]
     """  # noqa: E501
-</pre>
+```
  - [libs/community/langchain_community/retrievers/knn.py](https://github.com/langchain-ai/langchain/blob/master/libs/community/langchain_community/retrievers/knn.py)
  - [libs/community/langchain_community/retrievers/svm.py](https://github.com/langchain-ai/langchain/blob/master/libs/community/langchain_community/retrievers/svm.py)
  - [libs/community/langchain_community/retrievers/llama_index.py](https://github.com/langchain-ai/langchain/blob/master/libs/community/langchain_community/retrievers/llama_index.py)
@@ -871,7 +915,7 @@ class BaseRetriever(RunnableSerializable[RetrieverInput, RetrieverOutput], ABC):
  - [libs/community/langchain_community/graphs](https://github.com/langchain-ai/langchain/tree/master/libs/community/langchain_community/graphs) (a día 2024-05-01 tiene 18 ficheros)
  - [libs/community/langchain_community/vectorstores](https://github.com/langchain-ai/langchain/tree/master/libs/community/langchain_community/vectorstores) (desde el día 2024-02-01 ya tengo una sección sobre este tema, y es la siguiente en esta página web)
  - [libs/core/langchain_core/agents.py](https://github.com/langchain-ai/langchain/blob/master/libs/core/langchain_core/agents.py). Contiene las clases *AgentAction*, *AgentActionMessageLog*, *AgentStep* y *AgentFinish*, y las funciones *_convert_agent_action_to_messages*, *_convert_agent_observation_to_messages* y *_create_function_message*. Su cabecera es la siguiente.
-<pre>
+```python
 **Agent** is a class that uses an LLM to choose a sequence of actions to take.
 
 In Chains, a sequence of actions is hardcoded. In Agents,
@@ -899,7 +943,7 @@ Agents select and use **Tools** and **Toolkits** for actions.
 
     AgentType, AgentExecutor, AgentOutputParser, AgentExecutorIterator,
     AgentAction, AgentFinish, AgentStep
-</pre>
+```
 
 ## Uso de vectores de características
 
